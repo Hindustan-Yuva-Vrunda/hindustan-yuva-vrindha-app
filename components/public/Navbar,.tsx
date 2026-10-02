@@ -373,7 +373,7 @@ export default function Navbar() {
           bg-gradient-to-r
           from-[#F97316]/20
           via-[#FBBF24]/60
-          to-[#2563EB]/20
+          to-[#2563EB]/30
         "
       />
     </header>
