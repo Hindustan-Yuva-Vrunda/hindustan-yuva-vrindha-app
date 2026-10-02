@@ -417,7 +417,7 @@ export async function DELETE(
 
     if (
       currentUser.role === "USER" &&
-      collection.agentId !== currentUser.idd
+      collection.agentId !== currentUser.id
     ) {
       return NextResponse.json(
         {

@@ -43,7 +43,7 @@ export async function GET(
     const { id } = await context.params;
 
     const bookingDate =
-      await prisma.bookingDate.findUnique({
+      await prisma.poojaBooking.findUnique({
         where: {
           id,
         },
@@ -114,7 +114,7 @@ export async function PATCH(
     const { id } = await context.params;
 
     const existingDate =
-      await prisma.bookingDate.findUnique({
+      await prisma.poojaBooking.findUnique({
         where: {
           id,
         },
@@ -161,7 +161,7 @@ export async function PATCH(
        * If opening the date, we remove the record below.
        */
       if (status === "OPEN") {
-        await prisma.bookingDate.delete({
+        await prisma.poojaBooking.delete({
           where: {
             id,
           },
@@ -195,17 +195,20 @@ export async function PATCH(
     }
 
     const updatedDate =
-      await prisma.bookingDate.update({
-        where: {
-          id,
-        },
-        data: updateData,
-      });
+      await prisma.poojaBooking.update({
+  where: {
+    id,
+  },
+  data: {
+    bookingStatus: status === "OPEN" ? "CONFIRMED" : "CANCELLED",
+    notes: reason,
+  },
+});
 
     return NextResponse.json({
       success: true,
       message: "Calendar date updated successfully.",
-      bookingDate: updatedDate,
+      poojaBooking: updatedDate,
     });
   } catch (error) {
     console.error(
@@ -260,7 +263,7 @@ export async function DELETE(
     const { id } = await context.params;
 
     const existingDate =
-      await prisma.bookingDate.findUnique({
+      await prisma.poojaBooking.findUnique({
         where: {
           id,
         },
@@ -276,7 +279,7 @@ export async function DELETE(
       );
     }
 
-    await prisma.bookingDate.delete({
+    await prisma.poojaBooking.delete({
       where: {
         id,
       },
