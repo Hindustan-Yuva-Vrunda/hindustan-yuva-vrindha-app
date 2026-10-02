@@ -1,0 +1,53 @@
+{
+  "Navbar": {
+    "home": "Home",
+    "about": "About",
+    "gallery": "Gallery",
+    "contact": "Contact",
+    "language": "Language",
+    "login": "Login",
+    "register": "Register"
+  },
+  "Hero": {
+    "title": "Hindustan Yuva Vrindha",
+    "line1": "Rooted in our ancient traditions, united by faith, and inspired by the timeless wisdom of Sanatana Dharma.",
+    "line2": "Let devotion fill our hearts, service guide our actions, and Dharma illuminate our path.",
+    "line3": "Empowering the youth to preserve our culture, honour our heritage, and carry its values forward.",
+    "line4": "With the blessings of the Divine, we come together in unity, devotion, and the spirit of Seva.",
+    "line5": "Keeping the sacred flame of our traditions alive for generations to come.",
+    "explore": "Explore Our Journey",
+    "join": "Join Our Community"
+  },
+  "About": {
+    "title": "About Hindustan Yuva Vrindha",
+    "paragraph1": "For over 37 years, Hindustan Yuva Vrindha has been devoted to celebrating and worshipping Lord Ganesha with faith, tradition, and unity.",
+    "paragraph2": "What began as a humble spiritual gathering has grown into a cherished community rooted in devotion and cultural values.",
+    "paragraph3": "Through the years, generations have come together to seek the blessings of Lord Ganesha and celebrate the spirit of togetherness.",
+    "values": "Our journey is built on Bhakti, Seva, Sanskriti, and Samarpan.",
+    "paragraph4": "As we move forward, we remain committed to preserving our traditions and passing the divine spirit of Ganeshotsav to future generations.",
+    "highlight": "For 37 years and counting, our faith continues to grow, our community continues to unite, and our devotion to Lord Ganesha continues to shine."
+  },
+  "Gallery": {
+    "title": "Our Divine Journey",
+    "subtitle": "A glimpse into our celebrations through the years."
+  },
+  "Contact": {
+    "title": "Connect With Us",
+    "description": "Be a part of the devotion, tradition, and togetherness of Hindustan Yuva Vrindha.",
+    "paragraph": "Whether you wish to participate in our Ganeshotsav celebrations, volunteer for Seva, support our activities, or simply connect with our community, we would be happy to hear from you.",
+    "closing": "Join us in keeping the spirit of devotion alive.",
+    "phone": "Call Us",
+    "phoneDescription": "For enquiries and event information",
+    "email": "Email Us",
+    "emailDescription": "For general enquiries and collaboration",
+    "visit": "Visit Us",
+    "visitDescription": "Come together and celebrate the divine spirit of Lord Ganesha",
+    "quote": "Together in Faith. United in Devotion.",
+    "contactButton": "Contact Us",
+    "volunteerButton": "Join as a Volunteer"
+  },
+  "Footer": {
+    "tagline": "Faith • Tradition • Seva",
+    "copyright": "Hindustan Yuva Vrindha. All rights reserved."
+  }
+}

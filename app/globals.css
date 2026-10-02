@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --saffron: #E86A00;
+  --saffron-dark: #B94A00;
+  --gold: #F4B400;
+  --gold-light: #FFD966;
+  --cream: #FFF8E7;
+  --deep-green: #123524;
+  --green: #1F5C3A;
+  --brown: #5C3215;
+  --text-dark: #2B1A0E;
+  --white: #FFFFFF;
 }
 
 @theme inline {
@@ -23,4 +31,505 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px) scale(1);
+  }
+
+  50% {
+    transform: translateY(-15px) scale(1.15);
+  }
+}
+
+@keyframes sparkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.6) rotate(0deg);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.25) rotate(45deg);
+  }
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) rotate(18deg);
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  45% {
+    transform: translateX(450%) rotate(18deg);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateX(450%) rotate(18deg);
+    opacity: 0;
+  }
+}
+
+@keyframes goldShine {
+  0% {
+    background-position: 200% center;
+  }
+
+  100% {
+    background-position: -50% center;
+  }
+}
+
+@keyframes textShine {
+  0%,
+  45% {
+    background-position: 200% center;
+    opacity: 0;
+  }
+
+  55% {
+    opacity: 1;
+  }
+
+  100% {
+    background-position: -50% center;
+    opacity: 0;
+  }
+}
+
+
+/* =========================================================
+   HERO ANIMATIONS
+========================================================= */
+
+@keyframes fireGradient {
+  0% {
+    background-position: 200% center;
+  }
+
+  50% {
+    background-position: 50% center;
+  }
+
+  100% {
+    background-position: -100% center;
+  }
+}
+
+@keyframes softPulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.96);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes sparkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.7);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes sparkleGlitter {
+  0%,
+  100% {
+    transform: scale(0.85) rotate(0deg);
+    opacity: 0.65;
+    filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.5));
+  }
+
+  25% {
+    transform: scale(1.15) rotate(8deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 1));
+  }
+
+  50% {
+    transform: scale(0.95) rotate(-6deg);
+    opacity: 0.8;
+    filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.7));
+  }
+
+  75% {
+    transform: scale(1.2) rotate(6deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 10px rgba(251, 191, 36, 1));
+  }
+}
+
+
+
+@keyframes holiFloatOne {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(80px, 40px) scale(1.15);
+  }
+}
+
+@keyframes holiFloatTwo {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(-70px, 60px) scale(1.2);
+  }
+}
+
+@keyframes holiFloatThree {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(-80px, -50px) scale(1.1);
+  }
+}
+
+@keyframes holiFloatFour {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(90px, -40px) scale(1.2);
+  }
+}
+
+@keyframes holiFloatFive {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(-60px, -60px) scale(1.15);
+  }
+}
+
+@keyframes holiParticle {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(0.7);
+    opacity: 0.2;
+  }
+
+  50% {
+    transform: translate(25px, -35px) scale(1.4);
+    opacity: 1;
+  }
+}
+
+@keyframes logoGlow {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+
+/* =========================================================
+   HYV HOLI SMOKE EFFECT
+========================================================= */
+
+@keyframes holiSmokeOne {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  30% {
+    transform: translate(100px, 50px) scale(1.18);
+  }
+
+  60% {
+    transform: translate(40px, 130px) scale(0.9);
+  }
+
+  80% {
+    transform: translate(-40px, 70px) scale(1.12);
+  }
+}
+
+@keyframes holiSmokeTwo {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  35% {
+    transform: translate(-90px, 70px) scale(1.2);
+  }
+
+  65% {
+    transform: translate(-30px, 140px) scale(0.9);
+  }
+
+  85% {
+    transform: translate(70px, 60px) scale(1.1);
+  }
+}
+
+@keyframes holiSmokeThree {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  30% {
+    transform: translate(-100px, 50px) scale(1.15);
+  }
+
+  60% {
+    transform: translate(-40px, 130px) scale(0.92);
+  }
+
+  80% {
+    transform: translate(50px, 80px) scale(1.15);
+  }
+}
+
+@keyframes holiSmokeFour {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  30% {
+    transform: translate(90px, -50px) scale(1.15);
+  }
+
+  60% {
+    transform: translate(40px, -120px) scale(0.9);
+  }
+
+  80% {
+    transform: translate(-60px, -70px) scale(1.12);
+  }
+}
+
+@keyframes holiSmokeFive {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  40% {
+    transform: translate(-80px, -60px) scale(1.18);
+  }
+
+  70% {
+    transform: translate(-30px, -120px) scale(0.9);
+  }
+}
+
+@keyframes holiCenter {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(0.85);
+    opacity: 0.4;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+/* =========================================================
+   HOLI POWDER PARTICLES
+========================================================= */
+
+@keyframes holiParticleOne {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(0.6);
+    opacity: 0.2;
+  }
+
+  30% {
+    transform: translate(35px, -45px) scale(1.3);
+    opacity: 0.9;
+  }
+
+  65% {
+    transform: translate(-15px, -80px) scale(0.8);
+    opacity: 0.5;
+  }
+}
+
+@keyframes holiParticleTwo {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(0.5);
+    opacity: 0.2;
+  }
+
+  50% {
+    transform: translate(-30px, 50px) scale(1.4);
+    opacity: 1;
+  }
+}
+
+@keyframes holiParticleThree {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(0.7);
+    opacity: 0.15;
+  }
+
+  50% {
+    transform: translate(45px, -35px) scale(1.35);
+    opacity: 0.8;
+  }
+}
+
+/* =========================================================
+   LOGO
+========================================================= */
+
+@keyframes logoFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes logoShine {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+
+@keyframes popupEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes successProgress {
+  0% {
+    transform: scaleX(1);
+  }
+
+  100% {
+    transform: scaleX(0);
+  }
+}
+
+
+/* =========================================
+   GALLERY DEVOTIONAL DUST
+   ========================================= */
+
+@keyframes galleryDustCloud {
+  0% {
+    transform: translate3d(-80px, 20px, 0) scale(0.7);
+    opacity: 0;
+  }
+
+  25% {
+    opacity: 0.7;
+  }
+
+  60% {
+    transform: translate3d(80px, -20px, 0) scale(1.25);
+    opacity: 0.45;
+  }
+
+  100% {
+    transform: translate3d(180px, -60px, 0) scale(1.5);
+    opacity: 0;
+  }
+}
+
+.gallery-dust-cloud {
+  animation: galleryDustCloud 4.2s ease-out forwards;
+}
+
+.gallery-dust-gold {
+  animation-delay: 0.35s;
+}
+
+.gallery-dust-yellow {
+  animation-delay: 0.65s;
+}
+
+@keyframes galleryDustParticle {
+  0% {
+    transform: translate3d(-80px, 25px, 0) scale(0);
+    opacity: 0;
+  }
+
+  15% {
+    transform: translate3d(-30px, 0, 0) scale(1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: translate3d(40px, -35px, 0) scale(1.2);
+    opacity: 0.55;
+  }
+
+  100% {
+    transform: translate3d(160px, -80px, 0) scale(0.2);
+    opacity: 0;
+  }
+}
+
+.gallery-dust-particle {
+  animation-name: galleryDustParticle;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }

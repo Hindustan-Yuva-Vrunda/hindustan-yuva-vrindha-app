@@ -1,0 +1,248 @@
+generator client {
+  provider = "prisma-client-js"
+  
+}
+
+datasource db {
+  provider = "mongodb"
+    url      = env("DATABASE_URL")
+}
+
+
+// ============================================================
+// USER / AGENT
+// ============================================================
+
+model User {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+
+  name     String
+  email    String @unique
+  phone    String
+  password String
+
+  role   UserRole   @default(USER)
+  status UserStatus @default(PENDING)
+
+  // Bookings created by this agent
+  bookings PoojaBooking[]
+
+  // Contributions recorded by this agent
+  contributions Contribution[]
+
+  // Password reset
+  passwordResetTokens PasswordResetToken[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([role])
+}
+
+
+// ============================================================
+// USER ROLE
+// ============================================================
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+
+// ============================================================
+// USER APPROVAL STATUS
+// ============================================================
+
+enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  BLOCKED
+}
+
+
+// ============================================================
+// GANESHA / YEARLY INFORMATION
+// ============================================================
+
+model Ganesha {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  year        Int    
+  title       String
+  description String?
+  imageUrl    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+
+
+
+// ============================================================
+// POOJA BOOKING
+// ============================================================
+
+model PoojaBooking {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  // Unique booking reference
+  bookingNumber String @unique
+
+  // USER / AGENT who created the booking
+  agentId String @db.ObjectId
+  agent   User   @relation(fields: [agentId], references: [id])
+
+  // ----------------------------------------------------------
+  // POOJA DETAILS
+  // ----------------------------------------------------------
+
+  poojaName String
+
+  amount Float @default(0)
+
+  // ----------------------------------------------------------
+  // PERSON / DEVOTEE
+  // ----------------------------------------------------------
+
+  devoteeName String
+
+  devoteePhone String?
+
+  devoteeAddress String?
+
+  // ----------------------------------------------------------
+  // YEAR
+  // ----------------------------------------------------------
+
+  year Int
+
+  // ----------------------------------------------------------
+  // BOOKING DATE
+  // Required
+  // ----------------------------------------------------------
+
+  bookingDate DateTime
+
+  // ----------------------------------------------------------
+  // BOOKING STATUS
+  // ----------------------------------------------------------
+
+  bookingStatus BookingStatus @default(CONFIRMED)
+
+  notes String?
+
+  // Automatically records when the booking was created
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  // Agent's bookings by year
+  @@index([agentId, year])
+
+  // Year-wise bookings
+  @@index([year])
+
+  // Date-based lookup
+  @@index([bookingDate])
+}
+
+
+
+// ============================================================
+// BOOKING STATUS
+// ============================================================
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+
+// ============================================================
+// OFFLINE CONTRIBUTION
+// ============================================================
+
+model Contribution {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  // USER / AGENT who collected the contribution
+  agentId String @db.ObjectId
+  agent   User   @relation(fields: [agentId], references: [id])
+
+  // ----------------------------------------------------------
+  // CONTRIBUTOR DETAILS
+  // ----------------------------------------------------------
+
+  contributorName  String
+  contributorPhone String?
+  contributorAddress String?
+
+  // ----------------------------------------------------------
+  // CONTRIBUTION DETAILS
+  // ----------------------------------------------------------
+
+  amount Float
+
+  paymentMode PaymentMode
+
+  purpose String?
+
+  // Explicit year for historical records
+  year Int
+
+  contributionDate DateTime @default(now())
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Agent's collection history
+  @@index([agentId, year])
+
+  // Year-wise collection history
+  @@index([year])
+
+  // Date-wise collection history
+  @@index([contributionDate])
+}
+
+
+// ============================================================
+// OFFLINE PAYMENT MODE
+// ============================================================
+
+enum PaymentMode {
+  CASH
+  UPI
+  BANK_TRANSFER
+  OTHER
+}
+
+
+// ============================================================
+// PASSWORD RESET
+// ============================================================
+
+model PasswordResetToken {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  token String @unique
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
