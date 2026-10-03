@@ -1,16 +1,16 @@
-import Link from "next/link";
+"use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import {
   MdArrowForward,
   MdAutoAwesome,
 } from "react-icons/md";
-
 import { GrInstagram } from "react-icons/gr";
 
 export default function HeroSection() {
   return (
     <section className="relative min-h-screen overflow-hidden bg-[#FFFDF5]">
-
       {/* =========================================================
           BACKGROUND GLOW
       ========================================================== */}
@@ -50,23 +50,12 @@ export default function HeroSection() {
             lg:gap-8
           "
         >
-
           {/* =====================================================
               LEFT CONTENT
           ====================================================== */}
 
-          <div
-            className="
-              relative
-              z-20
-              min-w-0
-              max-w-2xl
-            "
-          >
-
-            {/* =================================================
-                DEVOTIONAL BADGE
-            ================================================== */}
+          <div className="relative z-20 min-w-0 max-w-2xl">
+            {/* DEVOTIONAL BADGE */}
 
             <div
               className="
@@ -83,8 +72,6 @@ export default function HeroSection() {
                 shadow-sm
               "
             >
-              
-
               <span
                 className="
                   text-sm
@@ -98,9 +85,7 @@ export default function HeroSection() {
               </span>
             </div>
 
-            {/* =================================================
-                MAIN HERO HEADING
-            ================================================== */}
+            {/* MAIN HERO HEADING */}
 
             <h1
               className="
@@ -134,9 +119,7 @@ export default function HeroSection() {
               </span>
             </h1>
 
-            {/* =================================================
-                SECONDARY HEADING
-            ================================================== */}
+            {/* SECONDARY HEADING */}
 
             <h2
               className="
@@ -154,9 +137,7 @@ export default function HeroSection() {
               Service, Culture &amp; Togetherness
             </h2>
 
-            {/* =================================================
-                DESCRIPTION
-            ================================================== */}
+            {/* DESCRIPTION */}
 
             <p
               className="
@@ -186,13 +167,11 @@ export default function HeroSection() {
               heritage and carry its values forward.
             </p>
 
-            {/* =================================================
-                CTA BUTTONS
-            ================================================== */}
+            {/* CTA BUTTONS */}
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-
               {/* Explore */}
+
               <Link
                 href="#about"
                 className="
@@ -229,6 +208,7 @@ export default function HeroSection() {
               </Link>
 
               {/* Instagram */}
+
               <a
                 href="https://www.instagram.com/hindustan_yuva_vrunda/"
                 target="_blank"
@@ -265,7 +245,6 @@ export default function HeroSection() {
 
                 Join Our Community
               </a>
-
             </div>
           </div>
 
@@ -278,22 +257,21 @@ export default function HeroSection() {
               relative
               z-10
               flex
-              min-h-[500px]
+              min-h-[430px]
               items-center
               justify-center
+              overflow-visible
+              sm:min-h-[500px]
               lg:min-h-[620px]
             "
           >
-
-            {/* =================================================
-                CENTRAL AURA
-            ================================================== */}
+            {/* CENTRAL AURA */}
 
             <div
               className="
                 absolute
-                h-[300px]
-                w-[300px]
+                h-[270px]
+                w-[270px]
                 rounded-full
                 bg-[#FBBF24]/20
                 blur-[45px]
@@ -312,8 +290,8 @@ export default function HeroSection() {
             <div
               className="
                 absolute
-                h-[390px]
-                w-[390px]
+                h-[350px]
+                w-[350px]
                 rounded-full
                 border-2
                 border-[#FBBF24]/60
@@ -324,7 +302,6 @@ export default function HeroSection() {
                 lg:w-[550px]
               "
             >
-
               <span
                 className="
                   absolute
@@ -364,7 +341,6 @@ export default function HeroSection() {
                   shadow-[0_0_18px_5px_rgba(251,191,36,0.55)]
                 "
               />
-
             </div>
 
             {/* =================================================
@@ -374,8 +350,8 @@ export default function HeroSection() {
             <div
               className="
                 absolute
-                h-[325px]
-                w-[325px]
+                h-[295px]
+                w-[295px]
                 rounded-full
                 border-2
                 border-dashed
@@ -387,7 +363,6 @@ export default function HeroSection() {
                 lg:w-[465px]
               "
             >
-
               <span
                 className="
                   absolute
@@ -427,7 +402,6 @@ export default function HeroSection() {
                   shadow-[0_0_15px_5px_rgba(37,99,235,0.35)]
                 "
               />
-
             </div>
 
             {/* =================================================
@@ -437,8 +411,8 @@ export default function HeroSection() {
             <div
               className="
                 absolute
-                h-[365px]
-                w-[365px]
+                h-[330px]
+                w-[330px]
                 animate-[spin_20s_linear_infinite]
                 sm:h-[450px]
                 sm:w-[450px]
@@ -446,7 +420,6 @@ export default function HeroSection() {
                 lg:w-[520px]
               "
             >
-
               <MdAutoAwesome
                 size={22}
                 className="
@@ -490,12 +463,11 @@ export default function HeroSection() {
                   animate-[sparkle_3s_ease-in-out_infinite]
                 "
               />
-
             </div>
 
             {/* =================================================
                 GANESHA
-                STATIC
+                STATIC IMAGE
             ================================================== */}
 
             <div
@@ -503,8 +475,8 @@ export default function HeroSection() {
                 relative
                 z-30
                 flex
-                h-[300px]
-                w-[300px]
+                h-[290px]
+                w-[290px]
                 items-center
                 justify-center
                 sm:h-[370px]
@@ -513,8 +485,8 @@ export default function HeroSection() {
                 lg:w-[430px]
               "
             >
-
               {/* Ganesha glow */}
+
               <div
                 className="
                   absolute
@@ -526,29 +498,34 @@ export default function HeroSection() {
               />
 
               {/* Ganesha Image */}
-              <img
+
+              <Image
                 src="/images/hero.png"
                 alt="Lord Ganesha"
+                width={400}
+                height={400}
+                priority
+                quality={75}
+                sizes="(max-width: 639px) 260px, (max-width: 1023px) 340px, 400px"
                 className="
                   relative
                   z-40
                   block
                   h-auto
                   w-auto
-                  max-h-[270px]
-                  max-w-[270px]
+                  max-h-[260px]
+                  max-w-[260px]
                   object-contain
                   drop-shadow-[0_14px_22px_rgba(59,36,21,0.25)]
+                  transition-transform
+                  duration-500
+                  hover:scale-[1.02]
                   sm:max-h-[340px]
                   sm:max-w-[340px]
                   lg:max-h-[400px]
                   lg:max-w-[400px]
-                  transition-transform
-                  duration-500
-                  hover:scale-[1.02]
                 "
               />
-
             </div>
 
             {/* =================================================
@@ -596,7 +573,6 @@ export default function HeroSection() {
                 animate-[sparkle_3s_ease-in-out_infinite]
               "
             />
-
           </div>
         </div>
       </div>
@@ -618,7 +594,6 @@ export default function HeroSection() {
           to-[#2563EB]
         "
       />
-
     </section>
   );
 }
