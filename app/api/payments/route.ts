@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+
 import { getCurrentUser } from "@/lib/auth";
 
 const PAYMENT_MODES = [
@@ -29,7 +30,9 @@ function parseContributionDate(value: unknown) {
     return null;
   }
 
-  const date = new Date(`${value}T00:00:00`);
+  const date = new Date(
+    `${value}T00:00:00`
+  );
 
   if (Number.isNaN(date.getTime())) {
     return null;
@@ -41,9 +44,24 @@ function parseContributionDate(value: unknown) {
 // ==================================================
 // GET /api/collection?year=2026
 // ==================================================
+//
+// ALL LOGGED-IN USERS
+// -> see all members' collections
+//
+// ADMIN
+// -> see all collections
+//
+// Optional:
+// /api/collection?year=2026
+//
+// ==================================================
 
 export async function GET(request: Request) {
   try {
+    // --------------------------------------------------
+    // 1. Authentication
+    // --------------------------------------------------
+
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
@@ -56,6 +74,10 @@ export async function GET(request: Request) {
       );
     }
 
+    // --------------------------------------------------
+    // 2. Read year
+    // --------------------------------------------------
+
     const { searchParams } = new URL(request.url);
 
     const yearParam = searchParams.get("year");
@@ -63,6 +85,10 @@ export async function GET(request: Request) {
     const year = yearParam
       ? Number(yearParam)
       : new Date().getFullYear();
+
+    // --------------------------------------------------
+    // 3. Validate year
+    // --------------------------------------------------
 
     if (
       !Number.isInteger(year) ||
@@ -78,20 +104,25 @@ export async function GET(request: Request) {
       );
     }
 
-    // ----------------------------------------------
-    // USER sees only their own collections
-    // ADMIN sees all collections
-    // ----------------------------------------------
+    // --------------------------------------------------
+    // 4. WHERE CONDITION
+    // --------------------------------------------------
+    //
+    // IMPORTANT:
+    // Do NOT filter by agentId here.
+    //
+    // Every logged-in member can see all collections
+    // for the selected year.
+    //
+    // --------------------------------------------------
 
-    const where =
-      currentUser.role === "ADMIN"
-        ? {
-            year,
-          }
-        : {
-            year,
-            agentId: currentUser.id,
-          };
+    const where = {
+      year,
+    };
+
+    // --------------------------------------------------
+    // 5. Fetch ALL collections
+    // --------------------------------------------------
 
     const collections =
       await prisma.contribution.findMany({
@@ -118,13 +149,17 @@ export async function GET(request: Request) {
         ],
       });
 
+    // --------------------------------------------------
+    // 6. Response
+    // --------------------------------------------------
+
     return NextResponse.json({
       success: true,
       collections,
     });
   } catch (error) {
     console.error(
-      "Get collections error:",
+      "GET /api/payments error:",
       error
     );
 
@@ -141,12 +176,19 @@ export async function GET(request: Request) {
 // ==================================================
 // POST /api/collection
 // ==================================================
+//
+// USER only
+//
+// The collection is always associated with the
+// authenticated member through agentId.
+//
+// ==================================================
 
 export async function POST(request: Request) {
   try {
-    // ----------------------------------------------
+    // --------------------------------------------------
     // 1. Authentication
-    // ----------------------------------------------
+    // --------------------------------------------------
 
     const currentUser = await getCurrentUser();
 
@@ -161,9 +203,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // ----------------------------------------------
+    // --------------------------------------------------
     // 2. Only USER/member can create
-    // ----------------------------------------------
+    // --------------------------------------------------
 
     if (currentUser.role !== "USER") {
       return NextResponse.json(
@@ -176,9 +218,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // ----------------------------------------------
-    // 3. Verify user in database
-    // ----------------------------------------------
+    // --------------------------------------------------
+    // 3. Verify authenticated user
+    // --------------------------------------------------
 
     const user =
       await prisma.user.findUnique({
@@ -205,9 +247,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // ----------------------------------------------
+    // --------------------------------------------------
     // 4. Must be approved
-    // ----------------------------------------------
+    // --------------------------------------------------
 
     if (user.status !== "APPROVED") {
       return NextResponse.json(
@@ -220,9 +262,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // ----------------------------------------------
-    // 5. Request body
-    // ----------------------------------------------
+    // --------------------------------------------------
+    // 5. Read request body
+    // --------------------------------------------------
 
     const body = await request.json();
 
@@ -238,9 +280,9 @@ export async function POST(request: Request) {
       notes,
     } = body;
 
-    // ----------------------------------------------
+    // --------------------------------------------------
     // 6. Contributor name
-    // ----------------------------------------------
+    // --------------------------------------------------
 
     if (
       typeof contributorName !== "string" ||
@@ -256,9 +298,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // ----------------------------------------------
+    // --------------------------------------------------
     // 7. Amount
-    // ----------------------------------------------
+    // --------------------------------------------------
 
     const parsedAmount = Number(amount);
 
@@ -276,9 +318,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // ----------------------------------------------
+    // --------------------------------------------------
     // 8. Payment mode
-    // ----------------------------------------------
+    // --------------------------------------------------
 
     if (!isPaymentMode(paymentMode)) {
       return NextResponse.json(
@@ -290,9 +332,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // ----------------------------------------------
+    // --------------------------------------------------
     // 9. Year
-    // ----------------------------------------------
+    // --------------------------------------------------
 
     const parsedYear = Number(year);
 
@@ -311,9 +353,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // ----------------------------------------------
+    // --------------------------------------------------
     // 10. Contribution date
-    // ----------------------------------------------
+    // --------------------------------------------------
 
     const parsedDate =
       parseContributionDate(
@@ -331,9 +373,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // ----------------------------------------------
+    // --------------------------------------------------
     // 11. Date must match selected year
-    // ----------------------------------------------
+    // --------------------------------------------------
 
     if (
       parsedDate.getFullYear() !==
@@ -349,16 +391,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // ----------------------------------------------
-    // 12. Create Contribution
-    // ----------------------------------------------
+    // --------------------------------------------------
+    // 12. Create contribution
+    // --------------------------------------------------
 
     const contribution =
       await prisma.contribution.create({
         data: {
           // IMPORTANT:
-          // Always take agentId from the
-          // authenticated user.
+          // Always store the authenticated member
+          // who created/collected this contribution.
 
           agentId: user.id,
 
@@ -410,9 +452,9 @@ export async function POST(request: Request) {
         },
       });
 
-    // ----------------------------------------------
+    // --------------------------------------------------
     // 13. Success
-    // ----------------------------------------------
+    // --------------------------------------------------
 
     return NextResponse.json(
       {
@@ -425,7 +467,7 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     console.error(
-      "Create collection error:",
+      "POST /api/collection error:",
       error
     );
 

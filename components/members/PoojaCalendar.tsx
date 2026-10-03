@@ -57,7 +57,6 @@ const weekDays = [
 
 function formatDate(date: string) {
   const [year, month, day] = date.split("-");
-
   return `${day}/${month}/${year}`;
 }
 
@@ -103,10 +102,7 @@ export default function PoojaCalendar({ year }: Props) {
   /*
    * Load booked dates.
    *
-   * IMPORTANT:
-   * The API should NOT return CANCELLED bookings.
-   *
-   * Therefore:
+   * CANCELLED bookings should NOT be returned by the API.
    *
    * CONFIRMED  -> BOOKED
    * PENDING    -> BOOKED
@@ -127,7 +123,9 @@ export default function PoojaCalendar({ year }: Props) {
         }
       );
 
-      const result = await response.json().catch(() => null);
+      const result = await response
+        .json()
+        .catch(() => null);
 
       if (!response.ok || !result?.success) {
         throw new Error(
@@ -162,12 +160,6 @@ export default function PoojaCalendar({ year }: Props) {
 
   /*
    * Store booked dates in a Set.
-   *
-   * Both:
-   * BOOKED
-   * MY_BOOKING
-   *
-   * are treated as BOOKED.
    */
   const bookedDates = useMemo(() => {
     return new Set(
@@ -289,24 +281,17 @@ export default function PoojaCalendar({ year }: Props) {
     setShowBooking(false);
     setSelectedDate(null);
 
-    /*
-     * Reload the calendar.
-     *
-     * Newly booked date becomes BOOKED.
-     */
     await loadBookings();
   };
 
   return (
     <>
-      <section className="overflow-hidden rounded-[28px] border border-[#F3E3B5] bg-white shadow-[0_25px_70px_rgba(59,36,21,0.10)]">
-
+      <section className="overflow-hidden rounded-[24px] border border-[#F3E3B5] bg-white shadow-[0_25px_70px_rgba(59,36,21,0.10)] sm:rounded-[28px]">
         {/* =========================================================
             HEADER
         ========================================================= */}
 
         <div className="relative overflow-hidden bg-gradient-to-br from-[#FFFDF5] via-[#FFF8E7] to-[#FFF1C2] px-4 py-5 sm:px-6 sm:py-6">
-
           {/* Decorative glow */}
 
           <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[#FBBF24]/20 blur-3xl" />
@@ -314,12 +299,10 @@ export default function PoojaCalendar({ year }: Props) {
           <div className="pointer-events-none absolute -bottom-24 -left-20 h-52 w-52 rounded-full bg-[#F97316]/10 blur-3xl" />
 
           <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-
             {/* Title */}
 
             <div>
               <div className="mb-2 flex items-center gap-2">
-
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#EA580C] shadow-sm">
                   <MdCalendarMonth className="text-2xl" />
                 </span>
@@ -327,7 +310,6 @@ export default function PoojaCalendar({ year }: Props) {
                 <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#9A3412]">
                   Pooja Availability
                 </span>
-
               </div>
 
               <h2 className="text-2xl font-black tracking-tight text-[#3B2415] sm:text-3xl">
@@ -338,15 +320,14 @@ export default function PoojaCalendar({ year }: Props) {
               </h2>
 
               <p className="mt-1 text-sm text-[#78583D]">
-                Select a green date to create a
-                new Pooja booking.
+                Select a green date to create a new
+                Pooja booking.
               </p>
             </div>
 
             {/* Month navigation */}
 
             <div className="flex items-center gap-2 self-start sm:self-center">
-
               <button
                 type="button"
                 onClick={handlePreviousMonth}
@@ -366,21 +347,15 @@ export default function PoojaCalendar({ year }: Props) {
               >
                 <MdChevronRight className="text-2xl" />
               </button>
-
             </div>
-
           </div>
 
-          {/* =====================================================
-              STATUS SUMMARY
-          ===================================================== */}
+          {/* STATUS SUMMARY */}
 
           <div className="relative mt-5 grid grid-cols-2 gap-3">
-
             {/* Free */}
 
-            <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-white/80 px-3 py-3 shadow-sm backdrop-blur-sm sm:px-4">
-
+            <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-white/80 px-3 py-3 shadow-sm backdrop-blur-sm sm:gap-3 sm:px-4">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
                 <MdCheckCircle className="text-xl" />
               </div>
@@ -394,13 +369,11 @@ export default function PoojaCalendar({ year }: Props) {
                   {freeCount}
                 </p>
               </div>
-
             </div>
 
             {/* Booked */}
 
-            <div className="flex items-center gap-3 rounded-2xl border border-orange-200 bg-white/80 px-3 py-3 shadow-sm backdrop-blur-sm sm:px-4">
-
+            <div className="flex items-center gap-2 rounded-2xl border border-orange-200 bg-white/80 px-3 py-3 shadow-sm backdrop-blur-sm sm:gap-3 sm:px-4">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
                 <MdEventAvailable className="text-xl" />
               </div>
@@ -414,9 +387,7 @@ export default function PoojaCalendar({ year }: Props) {
                   {bookedCount}
                 </p>
               </div>
-
             </div>
-
           </div>
         </div>
 
@@ -424,14 +395,11 @@ export default function PoojaCalendar({ year }: Props) {
             CALENDAR
         ========================================================= */}
 
-        <div className="p-3 sm:p-6">
-
+        <div className="p-2.5 sm:p-6">
           {/* Legend */}
 
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-
-            <div className="flex items-center gap-4">
-
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 sm:mb-5">
+            <div className="flex items-center gap-3 sm:gap-4">
               {/* Free legend */}
 
               <div className="flex items-center gap-2">
@@ -451,56 +419,49 @@ export default function PoojaCalendar({ year }: Props) {
                   Booked
                 </span>
               </div>
-
             </div>
 
             <div className="flex items-center gap-1.5 text-xs text-gray-500">
               <MdToday className="text-[#2563EB]" />
               <span>Today</span>
             </div>
-
           </div>
 
           {/* Week names */}
 
-          <div className="mb-2 grid grid-cols-7 gap-1.5 sm:gap-2">
-
+          <div className="mb-2 grid grid-cols-7 gap-1 sm:gap-2">
             {weekDays.map((day) => (
               <div
                 key={day}
-                className="py-2 text-center text-[10px] font-black uppercase tracking-wider text-[#8B7355] sm:text-xs"
+                className="py-1.5 text-center text-[9px] font-black uppercase tracking-wide text-[#8B7355] sm:py-2 sm:text-xs sm:tracking-wider"
               >
                 {day}
               </div>
             ))}
-
           </div>
 
           {/* Calendar grid */}
 
           {loading ? (
-            <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-
+            <div className="grid grid-cols-7 gap-1 sm:gap-2">
               {Array.from({ length: 35 }).map(
                 (_, index) => (
                   <div
                     key={index}
-                    className="aspect-square animate-pulse rounded-2xl border border-gray-100 bg-gray-50"
+                    className="h-12 w-full rounded-lg border border-gray-100 bg-gray-50 animate-pulse sm:h-auto sm:aspect-square sm:rounded-2xl"
                   />
                 )
               )}
-
             </div>
           ) : (
-            <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-
+            <div className="grid grid-cols-7 gap-1 sm:gap-2">
               {calendarDays.map(
                 (day, index) => {
                   if (!day) {
                     return (
                       <div
                         key={`empty-${index}`}
-                        className="aspect-square rounded-2xl"
+                        className="h-12 w-full sm:aspect-square sm:h-auto"
                       />
                     );
                   }
@@ -538,18 +499,25 @@ export default function PoojaCalendar({ year }: Props) {
                             )} free`
                       }
                       className={[
-                        "group relative aspect-square overflow-hidden rounded-2xl border p-1.5 transition-all duration-200 sm:p-2.5",
+                        /*
+                         * IMPORTANT:
+                         * Mobile uses a fixed height.
+                         * Desktop uses aspect-square.
+                         *
+                         * This prevents oval-shaped cells
+                         * on very small screens.
+                         */
+                        "group relative h-12 w-full overflow-hidden rounded-lg border p-1 transition-all duration-200 sm:aspect-square sm:h-auto sm:rounded-2xl sm:p-2.5",
 
                         isBooked
                           ? "cursor-not-allowed border-orange-300 bg-gradient-to-br from-[#FFF8D8] via-[#FDE68A] to-[#FDBA74] text-[#9A3412] shadow-[0_8px_24px_rgba(245,158,11,0.18)]"
                           : "cursor-pointer border-emerald-200 bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50 text-emerald-800 hover:-translate-y-1 hover:border-emerald-400 hover:bg-emerald-50 hover:shadow-[0_12px_28px_rgba(16,185,129,0.20)]",
 
                         isToday
-                          ? "ring-2 ring-[#2563EB] ring-offset-2"
+                          ? "ring-2 ring-[#2563EB] ring-offset-1 sm:ring-offset-2"
                           : "",
                       ].join(" ")}
                     >
-
                       {/* Decorative glow */}
 
                       <span
@@ -565,10 +533,9 @@ export default function PoojaCalendar({ year }: Props) {
                       {/* Day number */}
 
                       <div className="relative flex h-full flex-col items-center justify-center">
-
                         <span
                           className={[
-                            "text-base font-black sm:text-lg",
+                            "text-sm font-black sm:text-lg",
 
                             isBooked
                               ? "text-[#9A3412]"
@@ -580,14 +547,12 @@ export default function PoojaCalendar({ year }: Props) {
 
                         {/* Status icon */}
 
-                        <div className="mt-1">
-
+                        <div className="mt-0.5 sm:mt-1">
                           {isBooked ? (
-                            <MdEventAvailable className="text-base text-[#EA580C] sm:text-lg" />
+                            <MdEventAvailable className="text-sm text-[#EA580C] sm:text-lg" />
                           ) : (
-                            <MdCheckCircle className="text-base text-emerald-500 sm:text-lg" />
+                            <MdCheckCircle className="text-sm text-emerald-500 sm:text-lg" />
                           )}
-
                         </div>
 
                         {/* Status text */}
@@ -605,13 +570,12 @@ export default function PoojaCalendar({ year }: Props) {
                             ? "Booked"
                             : "Free"}
                         </span>
-
                       </div>
 
                       {/* Today label */}
 
                       {isToday && (
-                        <span className="absolute left-1/2 top-1 -translate-x-1/2 rounded-full bg-[#2563EB] px-1.5 py-0.5 text-[7px] font-black uppercase tracking-wide text-white shadow-sm">
+                        <span className="absolute left-1/2 top-0.5 -translate-x-1/2 rounded-full bg-[#2563EB] px-1 py-0.5 text-[6px] font-black uppercase tracking-wide text-white shadow-sm sm:top-1 sm:px-1.5 sm:py-0.5 sm:text-[7px]">
                           Today
                         </span>
                       )}
@@ -619,31 +583,26 @@ export default function PoojaCalendar({ year }: Props) {
                       {/* Booked lock */}
 
                       {isBooked && (
-                        <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/70 text-orange-600 shadow-sm">
-                          <MdLock className="text-[11px]" />
+                        <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-white/70 text-orange-600 shadow-sm sm:right-1 sm:top-1 sm:h-5 sm:w-5">
+                          <MdLock className="text-[9px] sm:text-[11px]" />
                         </span>
                       )}
-
                     </button>
                   );
                 }
               )}
-
             </div>
           )}
 
           {/* Bottom information */}
 
-          <div className="mt-5 rounded-2xl border border-[#F3E8C8] bg-[#FFFDF5] px-4 py-3">
-
+          <div className="mt-4 rounded-2xl border border-[#F3E8C8] bg-[#FFFDF5] px-3 py-3 sm:mt-5 sm:px-4">
             <div className="flex items-start gap-3">
-
               <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#FFF3C4] text-[#EA580C]">
                 <MdCalendarMonth />
               </div>
 
               <div>
-
                 <p className="text-xs font-bold text-[#3B2415]">
                   Booking availability
                 </p>
@@ -653,13 +612,9 @@ export default function PoojaCalendar({ year }: Props) {
                   booking. Golden dates are already
                   booked and cannot be selected.
                 </p>
-
               </div>
-
             </div>
-
           </div>
-
         </div>
       </section>
 

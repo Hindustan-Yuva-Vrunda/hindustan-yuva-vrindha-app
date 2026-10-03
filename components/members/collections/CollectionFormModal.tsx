@@ -31,9 +31,7 @@ type Props = {
   loading?: boolean;
   error?: string;
   onClose: () => void;
-  onSubmit: (
-    data: CollectionFormData
-  ) => void;
+  onSubmit: (data: CollectionFormData) => void;
 };
 
 export default function CollectionFormModal({
@@ -83,7 +81,8 @@ export default function CollectionFormModal({
             .toISOString()
             .split("T")[0],
 
-        notes: collection.notes || "",
+        notes:
+          collection.notes || "",
       });
 
       return;
@@ -113,34 +112,162 @@ export default function CollectionFormModal({
   ) {
     event.preventDefault();
 
+    if (loading) {
+      return;
+    }
+
     onSubmit(form);
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#EEE7DD] px-5 py-4 sm:px-6">
-          <div>
-            <h2 className="text-lg font-bold text-[#292524] sm:text-xl">
-              {collection
-                ? "Edit Collection"
-                : "Add Collection"}
-            </h2>
+    <div
+      className="
+        fixed
+        inset-0
+        z-100
+        flex
+        min-h-dvh
+        items-center
+        justify-center
+        overflow-hidden
+        bg-[#1C1917]/55
+        p-3
+        backdrop-blur-[6px]
+        sm:p-4
+      "
+    >
+      <div
+        className="
+          relative
+          flex
+          max-h-[94dvh]
+          w-full
+          min-w-0
+          max-w-2xl
+          flex-col
+          overflow-hidden
+          rounded-3xl
+          border
+          border-[#F0E5D2]
+          bg-[#FFFDFB]
+          shadow-[0_25px_80px_rgba(59,36,21,0.28)]
+          sm:max-h-[92dvh]
+          sm:rounded-[30px]
+        "
+      >
+        {/* Decorative top glow */}
+        <div
+          className="
+            pointer-events-none
+            absolute
+            left-1/2
+            top-0
+            h-24
+            w-72
+            -translate-x-1/2
+            rounded-full
+            bg-[#FBBF24]/10
+            blur-3xl
+          "
+        />
 
-            <p className="mt-0.5 text-xs text-[#78716C]">
-              Collection year:{" "}
-              <span className="font-bold text-[#EA580C]">
-                {year}
-              </span>
-            </p>
+        {/* Header */}
+        <div
+          className="
+            relative
+            flex
+            shrink-0
+            items-center
+            justify-between
+            gap-3
+            border-b
+            border-[#EEE7DD]
+            bg-[#FFFDFB]
+            px-4
+            py-4
+            sm:px-6
+            sm:py-5
+          "
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <div
+              className="
+                flex
+                h-10
+                w-10
+                shrink-0
+                items-center
+                justify-center
+                rounded-xl
+                bg-orange-50
+                text-[#EA580C]
+                shadow-sm
+                sm:h-11
+                sm:w-11
+                sm:rounded-2xl
+              "
+            >
+              <MdPayments
+                size={21}
+              />
+            </div>
+
+            <div className="min-w-0">
+              <h2
+                className="
+                  truncate
+                  text-base
+                  font-bold
+                  text-[#292524]
+                  sm:text-xl
+                "
+              >
+                {collection
+                  ? "Edit Collection"
+                  : "Add Collection"}
+              </h2>
+
+              <p
+                className="
+                  mt-0.5
+                  truncate
+                  text-xs
+                  text-[#78716C]
+                  sm:text-sm
+                "
+              >
+                Collection year:{" "}
+                <span className="font-bold text-[#EA580C]">
+                  {year}
+                </span>
+              </p>
+            </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-[#78716C] transition hover:bg-[#F5F1EA]"
+            aria-label="Close collection form"
+            className="
+              flex
+              h-9
+              w-9
+              shrink-0
+              items-center
+              justify-center
+              rounded-full
+              text-[#78716C]
+              transition-all
+              duration-200
+              hover:bg-[#F5F1EA]
+              hover:text-[#292524]
+              active:scale-95
+              disabled:cursor-not-allowed
+              disabled:opacity-50
+              sm:h-10
+              sm:w-10
+            "
           >
             <MdClose size={22} />
           </button>
@@ -149,277 +276,675 @@ export default function CollectionFormModal({
         {/* Form */}
         <form
           onSubmit={handleSubmit}
-          className="overflow-y-auto px-5 py-5 sm:px-6"
+          className="
+            flex
+            min-h-0
+            flex-1
+            flex-col
+            overflow-hidden
+          "
         >
-          {error && (
-            <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-              {error}
-            </div>
-          )}
-
-          <div className="grid gap-5 sm:grid-cols-2">
-            {/* Name */}
-            <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-sm font-semibold text-[#292524]">
-                Contributor Name
-                <span className="ml-1 text-red-500">
-                  *
-                </span>
-              </label>
-
-              <div className="relative">
-                <MdPerson
-                  size={19}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A29E]"
-                />
-
-                <input
-                  type="text"
-                  value={
-                    form.contributorName
-                  }
-                  onChange={(event) =>
-                    updateField(
-                      "contributorName",
-                      event.target.value
-                    )
-                  }
-                  placeholder="Enter contributor name"
-                  className="h-11 w-full rounded-xl border border-[#DDD6CE] bg-white pl-10 pr-3 text-sm text-[#292524] outline-none placeholder:text-[#A8A29E] focus:border-[#F97316] focus:ring-2 focus:ring-orange-100"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="mb-1.5 block text-sm font-semibold text-[#292524]">
-                Phone Number
-              </label>
-
-              <div className="relative">
-                <MdPhone
-                  size={19}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A29E]"
-                />
-
-                <input
-                  type="tel"
-                  value={
-                    form.contributorPhone
-                  }
-                  onChange={(event) =>
-                    updateField(
-                      "contributorPhone",
-                      event.target.value
-                        .replace(/\D/g, "")
-                        .slice(0, 10)
-                    )
-                  }
-                  placeholder="10 digit phone"
-                  inputMode="numeric"
-                  className="h-11 w-full rounded-xl border border-[#DDD6CE] bg-white pl-10 pr-3 text-sm text-[#292524] outline-none placeholder:text-[#A8A29E] focus:border-[#F97316] focus:ring-2 focus:ring-orange-100"
-                />
-              </div>
-            </div>
-
-            {/* Amount */}
-            <div>
-              <label className="mb-1.5 block text-sm font-semibold text-[#292524]">
-                Amount
-                <span className="ml-1 text-red-500">
-                  *
-                </span>
-              </label>
-
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-[#78716C]">
-                  ₹
-                </span>
-
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={form.amount}
-                  onChange={(event) =>
-                    updateField(
-                      "amount",
-                      event.target.value
-                    )
-                  }
-                  placeholder="Enter amount"
-                  className="h-11 w-full rounded-xl border border-[#DDD6CE] bg-white pl-8 pr-3 text-sm text-[#292524] outline-none placeholder:text-[#A8A29E] focus:border-[#F97316] focus:ring-2 focus:ring-orange-100"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Payment */}
-            <div>
-              <label className="mb-1.5 block text-sm font-semibold text-[#292524]">
-                Payment Mode
-              </label>
-
-              <select
-                value={form.paymentMode}
-                onChange={(event) =>
-                  updateField(
-                    "paymentMode",
-                    event.target.value as CollectionFormData["paymentMode"]
-                  )
-                }
-                className="h-11 w-full rounded-xl border border-[#DDD6CE] bg-white px-3 text-sm text-[#292524] outline-none focus:border-[#F97316] focus:ring-2 focus:ring-orange-100"
+          {/* Scrollable content */}
+          <div
+            className="
+              min-h-0
+              flex-1
+              overflow-y-auto
+              overscroll-contain
+              px-4
+              py-4
+              sm:px-6
+              sm:py-5
+            "
+          >
+            {error && (
+              <div
+                className="
+                  mb-5
+                  rounded-xl
+                  border
+                  border-red-200
+                  bg-red-50
+                  px-4
+                  py-3
+                  text-sm
+                  font-medium
+                  leading-5
+                  text-red-700
+                  wrap-break-words
+                "
               >
-                <option value="CASH">
-                  Cash
-                </option>
+                {error}
+              </div>
+            )}
 
-                <option value="UPI">
-                  UPI
-                </option>
+            <div
+              className="
+                grid
+                min-w-0
+                grid-cols-1
+                gap-4
+                sm:grid-cols-2
+                sm:gap-5
+              "
+            >
+              {/* Contributor Name */}
+              <div className="min-w-0 sm:col-span-2">
+                <label
+                  htmlFor="contributorName"
+                  className="
+                    mb-1.5
+                    block
+                    text-sm
+                    font-semibold
+                    text-[#292524]
+                  "
+                >
+                  Contributor Name
+                  <span className="ml-1 text-red-500">
+                    *
+                  </span>
+                </label>
 
-                <option value="BANK_TRANSFER">
-                  Bank Transfer
-                </option>
+                <div className="relative">
+                  <MdPerson
+                    size={19}
+                    className="
+                      pointer-events-none
+                      absolute
+                      left-3
+                      top-1/2
+                      -translate-y-1/2
+                      text-[#A8A29E]
+                    "
+                  />
 
-                <option value="OTHER">
-                  Other
-                </option>
-              </select>
-            </div>
+                  <input
+                    id="contributorName"
+                    type="text"
+                    value={
+                      form.contributorName
+                    }
+                    onChange={(event) =>
+                      updateField(
+                        "contributorName",
+                        event.target.value
+                      )
+                    }
+                    placeholder="Enter contributor name"
+                    className="
+                      h-11
+                      w-full
+                      min-w-0
+                      rounded-xl
+                      border
+                      border-[#DDD6CE]
+                      bg-white
+                      pl-10
+                      pr-3
+                      text-sm
+                      text-[#292524]
+                      outline-none
+                      transition
+                      placeholder:text-[#A8A29E]
+                      focus:border-[#F97316]
+                      focus:ring-2
+                      focus:ring-orange-100
+                    "
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </div>
 
-            {/* Date */}
-            <div>
-              <label className="mb-1.5 block text-sm font-semibold text-[#292524]">
-                Collection Date
-              </label>
+              {/* Phone */}
+              <div className="min-w-0">
+                <label
+                  htmlFor="contributorPhone"
+                  className="
+                    mb-1.5
+                    block
+                    text-sm
+                    font-semibold
+                    text-[#292524]
+                  "
+                >
+                  Phone Number
+                </label>
 
-              <input
-                type="date"
-                value={
-                  form.contributionDate
-                }
-                onChange={(event) =>
-                  updateField(
-                    "contributionDate",
-                    event.target.value
-                  )
-                }
-                className="h-11 w-full rounded-xl border border-[#DDD6CE] bg-white px-3 text-sm text-[#292524] outline-none focus:border-[#F97316] focus:ring-2 focus:ring-orange-100"
-                required
-              />
-            </div>
+                <div className="relative">
+                  <MdPhone
+                    size={19}
+                    className="
+                      pointer-events-none
+                      absolute
+                      left-3
+                      top-1/2
+                      -translate-y-1/2
+                      text-[#A8A29E]
+                    "
+                  />
 
-            {/* Address */}
-            <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-sm font-semibold text-[#292524]">
-                Contributor Address
-              </label>
+                  <input
+                    id="contributorPhone"
+                    type="tel"
+                    value={
+                      form.contributorPhone
+                    }
+                    onChange={(event) =>
+                      updateField(
+                        "contributorPhone",
+                        event.target.value
+                          .replace(/\D/g, "")
+                          .slice(0, 10)
+                      )
+                    }
+                    placeholder="10 digit phone"
+                    inputMode="numeric"
+                    maxLength={10}
+                    className="
+                      h-11
+                      w-full
+                      min-w-0
+                      rounded-xl
+                      border
+                      border-[#DDD6CE]
+                      bg-white
+                      pl-10
+                      pr-3
+                      text-sm
+                      text-[#292524]
+                      outline-none
+                      transition
+                      placeholder:text-[#A8A29E]
+                      focus:border-[#F97316]
+                      focus:ring-2
+                      focus:ring-orange-100
+                    "
+                    disabled={loading}
+                  />
+                </div>
+              </div>
 
-              <div className="relative">
-                <MdLocationOn
-                  size={20}
-                  className="absolute left-3 top-3 text-[#A8A29E]"
-                />
+              {/* Amount */}
+              <div className="min-w-0">
+                <label
+                  htmlFor="amount"
+                  className="
+                    mb-1.5
+                    block
+                    text-sm
+                    font-semibold
+                    text-[#292524]
+                  "
+                >
+                  Amount
+                  <span className="ml-1 text-red-500">
+                    *
+                  </span>
+                </label>
 
-                <textarea
+                <div className="relative">
+                  <span
+                    className="
+                      pointer-events-none
+                      absolute
+                      left-3
+                      top-1/2
+                      -translate-y-1/2
+                      font-bold
+                      text-[#78716C]
+                    "
+                  >
+                    ₹
+                  </span>
+
+                  <input
+                    id="amount"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={form.amount}
+                    onChange={(event) =>
+                      updateField(
+                        "amount",
+                        event.target.value
+                      )
+                    }
+                    placeholder="Enter amount"
+                    inputMode="decimal"
+                    className="
+                      h-11
+                      w-full
+                      min-w-0
+                      rounded-xl
+                      border
+                      border-[#DDD6CE]
+                      bg-white
+                      pl-8
+                      pr-3
+                      text-sm
+                      text-[#292524]
+                      outline-none
+                      transition
+                      placeholder:text-[#A8A29E]
+                      focus:border-[#F97316]
+                      focus:ring-2
+                      focus:ring-orange-100
+                    "
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              {/* Payment Mode */}
+              <div className="min-w-0">
+                <label
+                  htmlFor="paymentMode"
+                  className="
+                    mb-1.5
+                    block
+                    text-sm
+                    font-semibold
+                    text-[#292524]
+                  "
+                >
+                  Payment Mode
+                </label>
+
+                <select
+                  id="paymentMode"
+                  value={form.paymentMode}
+                  onChange={(event) =>
+                    updateField(
+                      "paymentMode",
+                      event.target
+                        .value as CollectionFormData["paymentMode"]
+                    )
+                  }
+                  className="
+                    h-11
+                    w-full
+                    min-w-0
+                    rounded-xl
+                    border
+                    border-[#DDD6CE]
+                    bg-white
+                    px-3
+                    text-sm
+                    text-[#292524]
+                    outline-none
+                    transition
+                    focus:border-[#F97316]
+                    focus:ring-2
+                    focus:ring-orange-100
+                  "
+                  disabled={loading}
+                >
+                  <option value="CASH">
+                    Cash
+                  </option>
+
+                  <option value="UPI">
+                    UPI
+                  </option>
+
+                  <option value="BANK_TRANSFER">
+                    Bank Transfer
+                  </option>
+
+                  <option value="OTHER">
+                    Other
+                  </option>
+                </select>
+              </div>
+
+              {/* Collection Date */}
+              <div className="min-w-0">
+                <label
+                  htmlFor="contributionDate"
+                  className="
+                    mb-1.5
+                    block
+                    text-sm
+                    font-semibold
+                    text-[#292524]
+                  "
+                >
+                  Collection Date
+                </label>
+
+                <input
+                  id="contributionDate"
+                  type="date"
                   value={
-                    form.contributorAddress
+                    form.contributionDate
                   }
                   onChange={(event) =>
                     updateField(
-                      "contributorAddress",
+                      "contributionDate",
                       event.target.value
                     )
                   }
-                  placeholder="Enter contributor address"
-                  rows={3}
-                  className="w-full resize-none rounded-xl border border-[#DDD6CE] bg-white py-2.5 pl-10 pr-3 text-sm text-[#292524] outline-none placeholder:text-[#A8A29E] focus:border-[#F97316] focus:ring-2 focus:ring-orange-100"
+                  className="
+                    h-11
+                    w-full
+                    min-w-0
+                    rounded-xl
+                    border
+                    border-[#DDD6CE]
+                    bg-white
+                    px-3
+                    text-sm
+                    text-[#292524]
+                    outline-none
+                    transition
+                    focus:border-[#F97316]
+                    focus:ring-2
+                    focus:ring-orange-100
+                  "
+                  required
+                  disabled={loading}
                 />
               </div>
-            </div>
 
-            {/* Purpose */}
-            <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-sm font-semibold text-[#292524]">
-                Purpose
-              </label>
+              {/* Address */}
+              <div className="min-w-0 sm:col-span-2">
+                <label
+                  htmlFor="contributorAddress"
+                  className="
+                    mb-1.5
+                    block
+                    text-sm
+                    font-semibold
+                    text-[#292524]
+                  "
+                >
+                  Contributor Address
+                </label>
 
-              <input
-                type="text"
-                value={form.purpose}
-                onChange={(event) =>
-                  updateField(
-                    "purpose",
-                    event.target.value
-                  )
-                }
-                placeholder="Ganeshotsav Contribution"
-                className="h-11 w-full rounded-xl border border-[#DDD6CE] bg-white px-3 text-sm text-[#292524] outline-none placeholder:text-[#A8A29E] focus:border-[#F97316] focus:ring-2 focus:ring-orange-100"
-              />
-            </div>
+                <div className="relative">
+                  <MdLocationOn
+                    size={20}
+                    className="
+                      pointer-events-none
+                      absolute
+                      left-3
+                      top-3
+                      text-[#A8A29E]
+                    "
+                  />
 
-            {/* Notes */}
-            <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-sm font-semibold text-[#292524]">
-                Notes
-              </label>
+                  <textarea
+                    id="contributorAddress"
+                    value={
+                      form.contributorAddress
+                    }
+                    onChange={(event) =>
+                      updateField(
+                        "contributorAddress",
+                        event.target.value
+                      )
+                    }
+                    placeholder="Enter contributor address"
+                    rows={3}
+                    className="
+                      min-h-22
+                      w-full
+                      min-w-0
+                      resize-none
+                      rounded-xl
+                      border
+                      border-[#DDD6CE]
+                      bg-white
+                      py-2.5
+                      pl-10
+                      pr-3
+                      text-sm
+                      leading-5
+                      text-[#292524]
+                      outline-none
+                      transition
+                      placeholder:text-[#A8A29E]
+                      focus:border-[#F97316]
+                      focus:ring-2
+                      focus:ring-orange-100
+                    "
+                    disabled={loading}
+                  />
+                </div>
+              </div>
 
-              <div className="relative">
-                <MdNotes
-                  size={20}
-                  className="absolute left-3 top-3 text-[#A8A29E]"
-                />
+              {/* Purpose */}
+              <div className="min-w-0 sm:col-span-2">
+                <label
+                  htmlFor="purpose"
+                  className="
+                    mb-1.5
+                    block
+                    text-sm
+                    font-semibold
+                    text-[#292524]
+                  "
+                >
+                  Purpose
+                </label>
 
-                <textarea
-                  value={form.notes}
+                <input
+                  id="purpose"
+                  type="text"
+                  value={form.purpose}
                   onChange={(event) =>
                     updateField(
-                      "notes",
+                      "purpose",
                       event.target.value
                     )
                   }
-                  placeholder="Additional notes"
-                  rows={3}
-                  className="w-full resize-none rounded-xl border border-[#DDD6CE] bg-white py-2.5 pl-10 pr-3 text-sm text-[#292524] outline-none placeholder:text-[#A8A29E] focus:border-[#F97316] focus:ring-2 focus:ring-orange-100"
+                  placeholder="Ganeshotsav Contribution"
+                  className="
+                    h-11
+                    w-full
+                    min-w-0
+                    rounded-xl
+                    border
+                    border-[#DDD6CE]
+                    bg-white
+                    px-3
+                    text-sm
+                    text-[#292524]
+                    outline-none
+                    transition
+                    placeholder:text-[#A8A29E]
+                    focus:border-[#F97316]
+                    focus:ring-2
+                    focus:ring-orange-100
+                  "
+                  disabled={loading}
                 />
+              </div>
+
+              {/* Notes */}
+              <div className="min-w-0 sm:col-span-2">
+                <label
+                  htmlFor="notes"
+                  className="
+                    mb-1.5
+                    block
+                    text-sm
+                    font-semibold
+                    text-[#292524]
+                  "
+                >
+                  Notes
+                </label>
+
+                <div className="relative">
+                  <MdNotes
+                    size={20}
+                    className="
+                      pointer-events-none
+                      absolute
+                      left-3
+                      top-3
+                      text-[#A8A29E]
+                    "
+                  />
+
+                  <textarea
+                    id="notes"
+                    value={form.notes}
+                    onChange={(event) =>
+                      updateField(
+                        "notes",
+                        event.target.value
+                      )
+                    }
+                    placeholder="Additional notes"
+                    rows={3}
+                    className="
+                      min-h-22
+                      w-full
+                      min-w-0
+                      resize-none
+                      rounded-xl
+                      border
+                      border-[#DDD6CE]
+                      bg-white
+                      py-2.5
+                      pl-10
+                      pr-3
+                      text-sm
+                      leading-5
+                      text-[#292524]
+                      outline-none
+                      transition
+                      placeholder:text-[#A8A29E]
+                      focus:border-[#F97316]
+                      focus:ring-2
+                      focus:ring-orange-100
+                    "
+                    disabled={loading}
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              className="h-11 rounded-xl border border-[#DDD6CE] px-5 text-sm font-bold text-[#57534E] hover:bg-[#F8F5F0] disabled:opacity-50"
+          {/* Fixed Actions */}
+          <div
+            className="
+              shrink-0
+              border-t
+              border-[#EEE7DD]
+              bg-[#FFFDFB]
+              px-4
+              pb-[calc(0.75rem+env(safe-area-inset-bottom))]
+              pt-3
+              sm:px-6
+              sm:py-4
+            "
+          >
+            <div
+              className="
+                flex
+                flex-col-reverse
+                gap-2.5
+                sm:flex-row
+                sm:justify-end
+                sm:gap-3
+              "
             >
-              Cancel
-            </button>
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={loading}
+                className="
+                  inline-flex
+                  h-11
+                  w-full
+                  items-center
+                  justify-center
+                  rounded-xl
+                  border
+                  border-[#DDD6CE]
+                  bg-white
+                  px-5
+                  text-sm
+                  font-bold
+                  text-[#57534E]
+                  transition-all
+                  duration-200
+                  hover:bg-[#F8F5F0]
+                  active:scale-[0.98]
+                  disabled:cursor-not-allowed
+                  disabled:opacity-50
+                  sm:w-auto
+                "
+              >
+                Cancel
+              </button>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#EA580C] px-6 text-sm font-bold text-white hover:bg-[#C2410C] disabled:opacity-60"
-            >
-              {loading ? (
-                <>
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+              <button
+                type="submit"
+                disabled={loading}
+                className="
+                  inline-flex
+                  h-11
+                  w-full
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-xl
+                  bg-[#EA580C]
+                  px-6
+                  text-sm
+                  font-bold
+                  text-white
+                  shadow-sm
+                  transition-all
+                  duration-200
+                  hover:bg-[#C2410C]
+                  hover:shadow-md
+                  active:scale-[0.98]
+                  disabled:cursor-not-allowed
+                  disabled:opacity-60
+                  sm:w-auto
+                "
+              >
+                {loading ? (
+                  <>
+                    <span
+                      className="
+                        h-4
+                        w-4
+                        animate-spin
+                        rounded-full
+                        border-2
+                        border-white/40
+                        border-t-white
+                      "
+                    />
 
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <MdPayments size={19} />
+                    <span>
+                      Saving...
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <MdPayments
+                      size={19}
+                    />
 
-                  {collection
-                    ? "Update Collection"
-                    : "Save Collection"}
-                </>
-              )}
-            </button>
+                    <span>
+                      {collection
+                        ? "Update Collection"
+                        : "Save Collection"}
+                    </span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>

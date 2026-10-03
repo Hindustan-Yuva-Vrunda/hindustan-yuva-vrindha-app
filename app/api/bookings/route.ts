@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -20,7 +19,6 @@ function generateBookingNumber() {
 
 function isValidDate(value: string) {
   const date = new Date(value);
-
   return !Number.isNaN(date.getTime());
 }
 
@@ -28,17 +26,25 @@ function isValidDate(value: string) {
 // GET /api/bookings
 // ----------------------------------------------------------
 //
-// USER  -> sees only their own bookings
-// ADMIN -> sees all bookings
+// ALL LOGGED-IN USERS
+// -> see all bookings
+//
+// ADMIN
+// -> see all bookings
 //
 // Optional:
 // /api/bookings?year=2026
 // /api/bookings?year=2026&status=CONFIRMED
+//
 // ----------------------------------------------------------
 
 export async function GET(request: Request) {
   try {
     const currentUser = await getCurrentUser();
+
+    // ----------------------------------------------------------
+    // AUTHENTICATION
+    // ----------------------------------------------------------
 
     if (!currentUser) {
       return NextResponse.json(
@@ -55,9 +61,7 @@ export async function GET(request: Request) {
     const yearParam = searchParams.get("year");
     const status = searchParams.get("status");
 
-    const year = yearParam
-      ? Number(yearParam)
-      : undefined;
+    const year = yearParam ? Number(yearParam) : undefined;
 
     // ----------------------------------------------------------
     // VALIDATE YEAR
@@ -81,12 +85,16 @@ export async function GET(request: Request) {
     // ----------------------------------------------------------
     // WHERE CONDITION
     // ----------------------------------------------------------
+    //
+    // IMPORTANT:
+    // Do NOT filter by agentId.
+    //
+    // Every logged-in user can see all bookings.
+    //
+    // ----------------------------------------------------------
 
     const where: {
-      agentId?: string;
-
       year?: number;
-
       bookingStatus?:
         | "PENDING"
         | "CONFIRMED"
@@ -94,17 +102,18 @@ export async function GET(request: Request) {
         | "COMPLETED";
     } = {};
 
-    // USER -> only own bookings
-    if (currentUser.role === "USER") {
-      where.agentId = currentUser.id;
-    }
-
+    // ----------------------------------------------------------
     // YEAR FILTER
+    // ----------------------------------------------------------
+
     if (year !== undefined) {
       where.year = year;
     }
 
+    // ----------------------------------------------------------
     // STATUS FILTER
+    // ----------------------------------------------------------
+
     if (
       status === "PENDING" ||
       status === "CONFIRMED" ||
@@ -115,33 +124,32 @@ export async function GET(request: Request) {
     }
 
     // ----------------------------------------------------------
-    // FETCH BOOKINGS
+    // FETCH ALL BOOKINGS
     // ----------------------------------------------------------
 
-    const bookings =
-      await prisma.poojaBooking.findMany({
-        where,
+    const bookings = await prisma.poojaBooking.findMany({
+      where,
 
-        include: {
-          agent: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              phone: true,
-            },
+      include: {
+        agent: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
           },
         },
+      },
 
-        orderBy: [
-          {
-            bookingDate: "desc",
-          },
-          {
-            createdAt: "desc",
-          },
-        ],
-      });
+      orderBy: [
+        {
+          bookingDate: "desc",
+        },
+        {
+          createdAt: "desc",
+        },
+      ],
+    });
 
     // ----------------------------------------------------------
     // RESPONSE
@@ -152,10 +160,7 @@ export async function GET(request: Request) {
       bookings,
     });
   } catch (error) {
-    console.error(
-      "GET /api/bookings error:",
-      error
-    );
+    console.error("GET /api/bookings error:", error);
 
     return NextResponse.json(
       {
@@ -188,6 +193,7 @@ export async function GET(request: Request) {
 // createdAt   -> automatic creation date/time
 // year        -> derived from date
 // agentId     -> logged-in user
+//
 // ----------------------------------------------------------
 
 export async function POST(request: Request) {
@@ -377,34 +383,19 @@ export async function POST(request: Request) {
     // DERIVE YEAR
     // ----------------------------------------------------------
 
-    const numericYear =
-      parsedBookingDate.getFullYear();
+    const numericYear = parsedBookingDate.getFullYear();
 
     // ----------------------------------------------------------
     // START / END OF SELECTED DAY
     // ----------------------------------------------------------
 
-    const startOfDay = new Date(
-      parsedBookingDate
-    );
+    const startOfDay = new Date(parsedBookingDate);
 
-    startOfDay.setHours(
-      0,
-      0,
-      0,
-      0
-    );
+    startOfDay.setHours(0, 0, 0, 0);
 
-    const endOfDay = new Date(
-      parsedBookingDate
-    );
+    const endOfDay = new Date(parsedBookingDate);
 
-    endOfDay.setHours(
-      23,
-      59,
-      59,
-      999
-    );
+    endOfDay.setHours(23, 59, 59, 999);
 
     // ----------------------------------------------------------
     // CHECK WHETHER DATE IS ALREADY BOOKED
@@ -443,9 +434,9 @@ export async function POST(request: Request) {
     const booking =
       await prisma.poojaBooking.create({
         data: {
-          bookingNumber:
-            generateBookingNumber(),
+          bookingNumber: generateBookingNumber(),
 
+          // Keep the agent who created the booking
           agentId: currentUser.id,
 
           poojaName: poojaName.trim(),
@@ -462,8 +453,7 @@ export async function POST(request: Request) {
 
           year: numericYear,
 
-          bookingDate:
-            parsedBookingDate,
+          bookingDate: parsedBookingDate,
 
           bookingStatus: "CONFIRMED",
 
@@ -493,17 +483,13 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: true,
-        message:
-          "Pooja booking created successfully.",
+        message: "Pooja booking created successfully.",
         booking,
       },
       { status: 201 }
     );
   } catch (error) {
-    console.error(
-      "POST /api/bookings error:",
-      error
-    );
+    console.error("POST /api/bookings error:", error);
 
     return NextResponse.json(
       {

@@ -1,17 +1,23 @@
 "use client";
 
-import { MdAdd, MdPayments } from "react-icons/md";
+import {
+  MdAdd,
+  MdPayments,
+  MdPictureAsPdf,
+} from "react-icons/md";
 
 type Props = {
   onAdd: () => void;
+  onExport: () => void;
 };
 
 export default function CollectionHeader({
   onAdd,
+  onExport,
 }: Props) {
   return (
     <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div>
+      <div className="min-w-0">
         <div className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-[#EA580C]">
           <MdPayments size={18} />
 
@@ -28,16 +34,65 @@ export default function CollectionHeader({
         </p>
       </div>
 
-      <button
-        type="button"
-        onClick={onAdd}
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#EA580C] px-5 text-sm font-bold text-white shadow-sm transition hover:bg-[#C2410C] active:scale-[0.98]"
-      >
-        <MdAdd size={22} />
+      <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
+        <button
+          type="button"
+          onClick={onExport}
+          className="
+            inline-flex
+            h-11
+            w-full
+            items-center
+            justify-center
+            gap-2
+            rounded-xl
+            border
+            border-[#FBBF24]
+            bg-[#FFF7E6]
+            px-5
+            text-sm
+            font-bold
+            text-[#EA580C]
+            shadow-sm
+            transition
+            hover:bg-[#FEF3C7]
+            active:scale-[0.98]
+            sm:w-auto
+          "
+        >
+          <MdPictureAsPdf size={21} />
 
-        Add Collection
-      </button>
+          Export PDF
+        </button>
+
+        <button
+          type="button"
+          onClick={onAdd}
+          className="
+            inline-flex
+            h-11
+            w-full
+            items-center
+            justify-center
+            gap-2
+            rounded-xl
+            bg-[#EA580C]
+            px-5
+            text-sm
+            font-bold
+            text-white
+            shadow-sm
+            transition
+            hover:bg-[#C2410C]
+            active:scale-[0.98]
+            sm:w-auto
+          "
+        >
+          <MdAdd size={22} />
+
+          Add Collection
+        </button>
+      </div>
     </div>
   );
 }
-

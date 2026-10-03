@@ -3,70 +3,51 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import CollectionDetailsModal from "./collections/CollectionDetailsModal";
-
 import CollectionFormModal from "./collections/CollectionFormModal";
-
 import CollectionHeader from "./collections/CollectionHeader";
-
 import CollectionList from "./collections/CollectionList";
-
 import CollectionSummary from "./collections/CollectionSummary";
-
 import CollectionToolbar from "./collections/CollectionToolbar";
+import { generateCollectionPdf } from "@/lib/generateCollectionListsPDF";
 
 import type {
   Collection,
   CollectionFormData,
 } from "./collections/collection.types";
 
-import {
-  getCurrentYear,
-} from "./collections/collection.utils";
+import { getCurrentYear } from "./collections/collection.utils";
 
 export default function CollectionsSection() {
-  // --------------------------------------------------
-  // Year
-  // --------------------------------------------------
+  // ==================================================
+  // YEAR
+  // ==================================================
 
-  const [year, setYear] = useState<number>(
-    getCurrentYear()
-  );
+  const [year, setYear] = useState<number>(getCurrentYear());
 
-  // --------------------------------------------------
-  // Collections
-  // --------------------------------------------------
+  // ==================================================
+  // COLLECTIONS
+  // ==================================================
 
-  const [collections, setCollections] =
-    useState<Collection[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
 
-  // --------------------------------------------------
-  // UI state
-  // --------------------------------------------------
+  // ==================================================
+  // UI STATE
+  // ==================================================
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const [saving, setSaving] =
-    useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const [error, setError] =
-    useState("");
+  const [search, setSearch] = useState("");
 
-  const [success, setSuccess] =
-    useState("");
+  // ==================================================
+  // MODAL STATE
+  // ==================================================
 
-  const [search, setSearch] =
-    useState("");
-
-  // --------------------------------------------------
-  // Modal state
-  // --------------------------------------------------
-
-  const [formOpen, setFormOpen] =
-    useState(false);
-
-  const [detailsOpen, setDetailsOpen] =
-    useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   const [editingCollection, setEditingCollection] =
     useState<Collection | null>(null);
@@ -78,53 +59,41 @@ export default function CollectionsSection() {
   // LOAD COLLECTIONS
   // ==================================================
 
-  const loadCollections = useCallback(
-    async () => {
-      try {
-        setLoading(true);
-        setError("");
+  const loadCollections = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-        const response = await fetch(
-          `/api/payments?year=${year}`,
-          {
-            method: "GET",
-            cache: "no-store",
-          }
+      const response = await fetch(`/api/payments?year=${year}`, {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.message || "Failed to load collections."
         );
-
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            result.message ||
-              "Failed to load collections."
-          );
-        }
-
-        setCollections(
-          result.collections || []
-        );
-      } catch (error) {
-        console.error(
-          "Load collections error:",
-          error
-        );
-
-        setError(
-          error instanceof Error
-            ? error.message
-            : "Failed to load collections."
-        );
-      } finally {
-        setLoading(false);
       }
-    },
-    [year]
-  );
 
-  // --------------------------------------------------
-  // Load when year changes
-  // --------------------------------------------------
+      setCollections(result.collections || []);
+    } catch (error) {
+      console.error("Load collections error:", error);
+
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to load collections."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [year]);
+
+  // ==================================================
+  // LOAD WHEN YEAR CHANGES
+  // ==================================================
 
   useEffect(() => {
     loadCollections();
@@ -146,9 +115,7 @@ export default function CollectionsSection() {
   // OPEN EDIT MODAL
   // ==================================================
 
-  function handleEditCollection(
-    collection: Collection
-  ) {
+  function handleEditCollection(collection: Collection) {
     setError("");
     setSuccess("");
 
@@ -163,97 +130,63 @@ export default function CollectionsSection() {
   // CREATE COLLECTION
   // ==================================================
 
-  async function createCollection(
-    form: CollectionFormData
-  ) {
+  async function createCollection(form: CollectionFormData) {
     try {
       setSaving(true);
       setError("");
       setSuccess("");
 
-      // ---------------------------------------------
-      // Basic frontend validation
-      // ---------------------------------------------
+      // -----------------------------------------------
+      // Frontend validation
+      // -----------------------------------------------
 
       if (!form.contributorName.trim()) {
-        throw new Error(
-          "Contributor name is required."
-        );
+        throw new Error("Contributor name is required.");
       }
 
       const amount = Number(form.amount);
 
-      if (
-        !Number.isFinite(amount) ||
-        amount <= 0
-      ) {
-        throw new Error(
-          "Amount must be greater than 0."
-        );
+      if (!Number.isFinite(amount) || amount <= 0) {
+        throw new Error("Amount must be greater than 0.");
       }
 
       if (!form.contributionDate) {
-        throw new Error(
-          "Collection date is required."
-        );
+        throw new Error("Collection date is required.");
       }
 
-      // ---------------------------------------------
+      // -----------------------------------------------
       // API request
-      // ---------------------------------------------
+      // -----------------------------------------------
 
-      const response = await fetch(
-        "/api/payments",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            contributorName:
-              form.contributorName.trim(),
-
-            contributorPhone:
-              form.contributorPhone.trim(),
-
-            contributorAddress:
-              form.contributorAddress.trim(),
-
-            amount,
-
-            paymentMode:
-              form.paymentMode,
-
-            purpose:
-              form.purpose.trim(),
-
-            year,
-
-            contributionDate:
-              form.contributionDate,
-
-            notes:
-              form.notes.trim(),
-          }),
-        }
-      );
+      const response = await fetch("/api/payments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contributorName: form.contributorName.trim(),
+          contributorPhone: form.contributorPhone.trim(),
+          contributorAddress: form.contributorAddress.trim(),
+          amount,
+          paymentMode: form.paymentMode,
+          purpose: form.purpose.trim(),
+          year,
+          contributionDate: form.contributionDate,
+          notes: form.notes.trim(),
+        }),
+      });
 
       const result = await response.json();
 
-      // ---------------------------------------------
-      // API error
-      // ---------------------------------------------
-
       if (!response.ok) {
         throw new Error(
-          result.message ||
-            "Failed to create collection."
+          result.message || "Failed to create collection."
         );
       }
 
-      // ---------------------------------------------
-      // Add returned collection to list
-      // ---------------------------------------------
+      // -----------------------------------------------
+      // Update local list
+      // -----------------------------------------------
 
       if (result.collection) {
         setCollections((previous) => [
@@ -264,25 +197,20 @@ export default function CollectionsSection() {
         await loadCollections();
       }
 
-      // ---------------------------------------------
+      // -----------------------------------------------
       // Close modal
-      // ---------------------------------------------
+      // -----------------------------------------------
 
       setFormOpen(false);
       setEditingCollection(null);
 
-      setSuccess(
-        "Collection added successfully."
-      );
+      setSuccess("Collection added successfully.");
 
       setTimeout(() => {
         setSuccess("");
       }, 3000);
     } catch (error) {
-      console.error(
-        "Create collection error:",
-        error
-      );
+      console.error("Create collection error:", error);
 
       setError(
         error instanceof Error
@@ -300,9 +228,7 @@ export default function CollectionsSection() {
   // UPDATE COLLECTION
   // ==================================================
 
-  async function updateCollection(
-    form: CollectionFormData
-  ) {
+  async function updateCollection(form: CollectionFormData) {
     if (!editingCollection) {
       return;
     }
@@ -312,36 +238,27 @@ export default function CollectionsSection() {
       setError("");
       setSuccess("");
 
-      // ---------------------------------------------
-      // Basic validation
-      // ---------------------------------------------
+      // -----------------------------------------------
+      // Validation
+      // -----------------------------------------------
 
       if (!form.contributorName.trim()) {
-        throw new Error(
-          "Contributor name is required."
-        );
+        throw new Error("Contributor name is required.");
       }
 
       const amount = Number(form.amount);
 
-      if (
-        !Number.isFinite(amount) ||
-        amount <= 0
-      ) {
-        throw new Error(
-          "Amount must be greater than 0."
-        );
+      if (!Number.isFinite(amount) || amount <= 0) {
+        throw new Error("Amount must be greater than 0.");
       }
 
       if (!form.contributionDate) {
-        throw new Error(
-          "Collection date is required."
-        );
+        throw new Error("Collection date is required.");
       }
 
-      // ---------------------------------------------
+      // -----------------------------------------------
       // API request
-      // ---------------------------------------------
+      // -----------------------------------------------
 
       const response = await fetch(
         `/api/payments/${editingCollection.id}`,
@@ -351,30 +268,15 @@ export default function CollectionsSection() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            contributorName:
-              form.contributorName.trim(),
-
-            contributorPhone:
-              form.contributorPhone.trim(),
-
-            contributorAddress:
-              form.contributorAddress.trim(),
-
+            contributorName: form.contributorName.trim(),
+            contributorPhone: form.contributorPhone.trim(),
+            contributorAddress: form.contributorAddress.trim(),
             amount,
-
-            paymentMode:
-              form.paymentMode,
-
-            purpose:
-              form.purpose.trim(),
-
+            paymentMode: form.paymentMode,
+            purpose: form.purpose.trim(),
             year,
-
-            contributionDate:
-              form.contributionDate,
-
-            notes:
-              form.notes.trim(),
+            contributionDate: form.contributionDate,
+            notes: form.notes.trim(),
           }),
         }
       );
@@ -383,20 +285,18 @@ export default function CollectionsSection() {
 
       if (!response.ok) {
         throw new Error(
-          result.message ||
-            "Failed to update collection."
+          result.message || "Failed to update collection."
         );
       }
 
-      // ---------------------------------------------
+      // -----------------------------------------------
       // Update local list
-      // ---------------------------------------------
+      // -----------------------------------------------
 
       if (result.collection) {
         setCollections((previous) =>
           previous.map((item) =>
-            item.id ===
-            editingCollection.id
+            item.id === editingCollection.id
               ? result.collection
               : item
           )
@@ -405,25 +305,20 @@ export default function CollectionsSection() {
         await loadCollections();
       }
 
-      // ---------------------------------------------
+      // -----------------------------------------------
       // Close modal
-      // ---------------------------------------------
+      // -----------------------------------------------
 
       setFormOpen(false);
       setEditingCollection(null);
 
-      setSuccess(
-        "Collection updated successfully."
-      );
+      setSuccess("Collection updated successfully.");
 
       setTimeout(() => {
         setSuccess("");
       }, 3000);
     } catch (error) {
-      console.error(
-        "Update collection error:",
-        error
-      );
+      console.error("Update collection error:", error);
 
       setError(
         error instanceof Error
@@ -441,9 +336,7 @@ export default function CollectionsSection() {
   // FORM SUBMIT
   // ==================================================
 
-  async function handleFormSubmit(
-    form: CollectionFormData
-  ) {
+  async function handleFormSubmit(form: CollectionFormData) {
     if (editingCollection) {
       await updateCollection(form);
       return;
@@ -482,33 +375,26 @@ export default function CollectionsSection() {
 
       if (!response.ok) {
         throw new Error(
-          result.message ||
-            "Failed to delete collection."
+          result.message || "Failed to delete collection."
         );
       }
 
       setCollections((previous) =>
         previous.filter(
-          (item) =>
-            item.id !== collection.id
+          (item) => item.id !== collection.id
         )
       );
 
       setSelectedCollection(null);
       setDetailsOpen(false);
 
-      setSuccess(
-        "Collection deleted successfully."
-      );
+      setSuccess("Collection deleted successfully.");
 
       setTimeout(() => {
         setSuccess("");
       }, 3000);
     } catch (error) {
-      console.error(
-        "Delete collection error:",
-        error
-      );
+      console.error("Delete collection error:", error);
 
       setError(
         error instanceof Error
@@ -523,32 +409,25 @@ export default function CollectionsSection() {
   // ==================================================
 
   const filteredCollections = useMemo(() => {
-    const value =
-      search.trim().toLowerCase();
+    const value = search.trim().toLowerCase();
 
     if (!value) {
       return collections;
     }
 
-    return collections.filter(
-      (collection) => {
-        return (
-          collection.contributorName
-            .toLowerCase()
-            .includes(value) ||
-          (
-            collection.contributorPhone || ""
-          )
-            .toLowerCase()
-            .includes(value) ||
-          (
-            collection.purpose || ""
-          )
-            .toLowerCase()
-            .includes(value)
-        );
-      }
-    );
+    return collections.filter((collection) => {
+      return (
+        collection.contributorName
+          .toLowerCase()
+          .includes(value) ||
+        (collection.contributorPhone || "")
+          .toLowerCase()
+          .includes(value) ||
+        (collection.purpose || "")
+          .toLowerCase()
+          .includes(value)
+      );
+    });
   }, [collections, search]);
 
   // ==================================================
@@ -558,20 +437,21 @@ export default function CollectionsSection() {
   const totalAmount = useMemo(() => {
     return collections.reduce(
       (total, collection) =>
-        total +
-        Number(collection.amount || 0),
+        total + Number(collection.amount || 0),
       0
     );
   }, [collections]);
+
+  // Keep calculated value available for future summary
+  void totalAmount;
 
   // ==================================================
   // OPEN DETAILS
   // ==================================================
 
-  function handleOpenDetails(
-    collection: Collection
-  ) {
+  function handleOpenDetails(collection: Collection) {
     setError("");
+
     setSelectedCollection(collection);
     setDetailsOpen(true);
   }
@@ -599,78 +479,170 @@ export default function CollectionsSection() {
     setSelectedCollection(null);
   }
 
+
+  async function handleExportCollectionsPdf() {
+  try {
+    setError("");
+
+    await generateCollectionPdf(
+      collections,
+      year
+    );
+  } catch (error) {
+    console.error(
+      "Export collections PDF error:",
+      error
+    );
+
+    setError(
+      error instanceof Error
+        ? error.message
+        : "Unable to export collection PDF."
+    );
+  }
+}
   // ==================================================
   // RENDER
   // ==================================================
 
   return (
-    <section className="min-h-screen bg-[#FFFDF5] px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
+    <section
+      className="
+        min-h-screen
+        min-w-0
+        overflow-x-hidden
+        bg-[#FFFDF5]
+        px-3
+        py-4
+        sm:px-5
+        sm:py-6
+        md:px-6
+        lg:px-8
+      "
+    >
+      <div
+        className="
+          mx-auto
+          w-full
+          min-w-0
+          max-w-7xl
+        "
+      >
+        {/* ==================================================
+            HEADER
+        ================================================== */}
 
-        {/* ------------------------------------------
-            Header
-        ------------------------------------------- */}
+        <div className="min-w-0">
+          <CollectionHeader onAdd={handleAddCollection}
+           onExport={handleExportCollectionsPdf} 
+          />
+        </div>
 
-        <CollectionHeader
-          onAdd={handleAddCollection}
-        />
-
-        {/* ------------------------------------------
-            Success message
-        ------------------------------------------- */}
+        {/* ==================================================
+            SUCCESS MESSAGE
+        ================================================== */}
 
         {success && (
-          <div className="mb-5 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
-            {success}
+          <div
+            className="
+              mb-4
+              w-full
+              min-w-0
+              overflow-hidden
+              rounded-xl
+              border
+              border-green-200
+              bg-green-50
+              px-3
+              py-3
+              text-sm
+              font-semibold
+              text-green-700
+              sm:mb-5
+              sm:px-4
+            "
+          >
+            <p className="break-words">{success}</p>
           </div>
         )}
 
-        {/* ------------------------------------------
-            Error message
-        ------------------------------------------- */}
+        {/* ==================================================
+            ERROR MESSAGE
+        ================================================== */}
 
         {error && !formOpen && (
-          <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-            {error}
+          <div
+            className="
+              mb-4
+              w-full
+              min-w-0
+              overflow-hidden
+              rounded-xl
+              border
+              border-red-200
+              bg-red-50
+              px-3
+              py-3
+              text-sm
+              font-semibold
+              text-red-700
+              sm:mb-5
+              sm:px-4
+            "
+          >
+            <p className="break-words">{error}</p>
           </div>
         )}
 
-        {/* ------------------------------------------
-            Summary
-        ------------------------------------------- */}
+        {/* ==================================================
+            SUMMARY
+        ================================================== */}
 
-        <CollectionSummary
-          collections={collections}
-          year={year}
-        />
+        <div className="min-w-0">
+          <CollectionSummary
+            collections={collections}
+            year={year}
+          />
+        </div>
 
-        {/* ------------------------------------------
-            Toolbar
-        ------------------------------------------- */}
+        {/* ==================================================
+            TOOLBAR
+        ================================================== */}
 
-        <CollectionToolbar
-          year={year}
-          search={search}
-          onYearChange={setYear}
-          onSearchChange={setSearch}
-        />
+        <div className="mt-4 min-w-0 sm:mt-5">
+          <CollectionToolbar
+            year={year}
+            search={search}
+            onYearChange={setYear}
+            onSearchChange={setSearch}
+          />
+        </div>
 
-        {/* ------------------------------------------
-            Collection list
-        ------------------------------------------- */}
+        {/* ==================================================
+            COLLECTION LIST
+        ================================================== */}
 
-        <CollectionList
-          collections={filteredCollections}
-          loading={loading}
-          year={year}
-          onAdd={handleAddCollection}
-          onSelect={handleOpenDetails}
-        />
+        <div
+          className="
+            mt-4
+            min-w-0
+            overflow-hidden
+            sm:mt-5
+          "
+        >
+          <CollectionList
+            collections={filteredCollections}
+            loading={loading}
+            year={year}
+            onAdd={handleAddCollection}
+            onSelect={handleOpenDetails}
+          />
+        </div>
       </div>
 
-      {/* ==========================================
+      {/* ==================================================
           CREATE / EDIT MODAL
-      =========================================== */}
+      ================================================== */}
 
       <CollectionFormModal
         open={formOpen}
@@ -682,9 +654,9 @@ export default function CollectionsSection() {
         onSubmit={handleFormSubmit}
       />
 
-      {/* ==========================================
+      {/* ==================================================
           DETAILS MODAL
-      =========================================== */}
+      ================================================== */}
 
       {detailsOpen && selectedCollection && (
         <CollectionDetailsModal

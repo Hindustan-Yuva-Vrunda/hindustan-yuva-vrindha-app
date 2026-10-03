@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import { generatePoojaBookingsPdf } from "@/lib/generatePoojaListsPDF";
 import {
   MdCalendarMonth,
   MdEventAvailable,
@@ -13,6 +13,7 @@ import {
   MdEdit,
   MdDelete,
   MdSave,
+  MdPictureAsPdf,
 } from "react-icons/md";
 
 type BookingStatus =
@@ -69,6 +70,9 @@ function getStatusStyle(status: BookingStatus) {
       return "bg-gray-100 text-gray-700";
   }
 }
+
+
+
 
 export default function PoojaBooking() {
   const currentYear = new Date().getFullYear();
@@ -283,6 +287,27 @@ const confirmedBookingCount = bookings.filter(
     }
   };
 
+
+  const handleExportConfirmedBookings = () => {
+  try {
+    generatePoojaBookingsPdf(
+      bookings,
+      selectedYear
+    );
+  } catch (error) {
+    console.error(
+      "Export Pooja bookings error:",
+      error
+    );
+
+    alert(
+      error instanceof Error
+        ? error.message
+        : "Unable to export confirmed bookings."
+    );
+  }
+};
+
   return (
     <div className="min-h-screen bg-[#FFFDF5] p-5 sm:p-8">
       <div className="mx-auto max-w-5xl">
@@ -292,21 +317,39 @@ const confirmedBookingCount = bookings.filter(
         {/* ================================================== */}
 
         <div className="mb-8">
-          <div className="flex items-center gap-2">
-            <MdEventAvailable
-              size={26}
-              className="text-[#EA580C]"
-            />
+  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="min-w-0">
+      <div className="flex items-center gap-2">
+        <MdEventAvailable
+          size={26}
+          className="shrink-0 text-[#EA580C]"
+        />
 
-            <h1 className="text-2xl font-bold text-[#3B2415]">
-              Pooja Booking
-            </h1>
-          </div>
+        <h1 className="text-2xl font-bold text-[#3B2415]">
+          Pooja Booking
+        </h1>
+      </div>
 
-          <p className="mt-1 text-sm text-[#78716C]">
-            View Pooja bookings for {selectedYear}.
-          </p>
-        </div>
+      <p className="mt-1 text-sm text-[#78716C]">
+        View Pooja bookings for {selectedYear}.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      onClick={handleExportConfirmedBookings}
+      disabled={
+        loading ||
+        confirmedBookingCount === 0
+      }
+      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#EA580C] px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#C2410C] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+    >
+      <MdPictureAsPdf size={20} />
+
+      Export Confirmed
+    </button>
+  </div>
+</div>
 
         {/* ================================================== */}
         {/* SELECTED YEAR SUMMARY */}
