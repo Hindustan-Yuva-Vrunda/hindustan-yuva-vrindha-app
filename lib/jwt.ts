@@ -10,7 +10,7 @@ const secret = new TextEncoder().encode(JWT_SECRET);
 
 export interface JWTPayload {
   userId: string;
-  role: "USER" | "ADMIN";
+  role: "USER" | "ADMIN" | "EDITOR";
 }
 
 export async function createToken(payload: JWTPayload) {
@@ -32,7 +32,7 @@ export async function verifyToken(token: string) {
 
     return {
       userId: payload.userId as string,
-      role: payload.role as "USER" | "ADMIN",
+      role: payload.role as "USER" | "ADMIN" | "EDITOR",
     };
   } catch {
     return null;

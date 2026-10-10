@@ -47,6 +47,7 @@ model User {
 
 enum UserRole {
   USER
+  EDITOR
   ADMIN
 }
 

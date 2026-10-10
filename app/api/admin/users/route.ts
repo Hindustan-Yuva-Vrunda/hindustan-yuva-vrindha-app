@@ -8,8 +8,10 @@ export async function GET() {
     await requireAdmin();
 
     const users = await prisma.user.findMany({
-      where: {
-        role: "USER",
+       where: {
+        role: {
+          in: ["USER", "EDITOR"],
+        },
       },
       select: {
         id: true,

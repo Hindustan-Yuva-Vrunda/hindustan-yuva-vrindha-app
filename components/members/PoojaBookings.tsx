@@ -96,6 +96,7 @@ export default function PoojaBooking() {
     devoteePhone: "",
     devoteeAddress: "",
     poojaName: "",
+    bookingDate: "",
     amount: "",
     notes: "",
   });
@@ -156,6 +157,16 @@ const confirmedBookingCount = bookings.filter(
   // ----------------------------------------------------------
   // OPEN EDIT MODE
   // ----------------------------------------------------------
+function toDateInputValue(date: string) {
+  if (!date) return "";
+
+  // Preserve the calendar date from an ISO date string.
+  const datePart = date.slice(0, 10);
+
+  return /^\d{4}-\d{2}-\d{2}$/.test(datePart)
+    ? datePart
+    : "";
+}
 
   const handleEditClick = () => {
     if (!selectedBooking) return;
@@ -165,6 +176,7 @@ const confirmedBookingCount = bookings.filter(
       devoteePhone: selectedBooking.devoteePhone || "",
       devoteeAddress: selectedBooking.devoteeAddress || "",
       poojaName: selectedBooking.poojaName,
+      bookingDate: toDateInputValue(selectedBooking.bookingDate),
       amount: String(selectedBooking.amount),
       notes: selectedBooking.notes || "",
     });
@@ -195,6 +207,7 @@ const confirmedBookingCount = bookings.filter(
             devoteeAddress:
               editForm.devoteeAddress.trim(),
             poojaName: editForm.poojaName.trim(),
+            bookingDate: editForm.bookingDate,
             amount: Number(editForm.amount || 0),
             notes: editForm.notes.trim(),
           }),
@@ -791,6 +804,19 @@ const confirmedBookingCount = bookings.filter(
                     />
                   </div>
 
+
+                  {/* BOOKING DATE */}
+                   <div> 
+                    <label className="mb-2 block text-sm font-bold text-[#3B2415]"> Booking Date </label> 
+                    <div className="relative"> 
+                      <input type="date" 
+                      value={editForm.bookingDate} 
+                      onChange={(event) => 
+                      setEditForm((previous) => ({ ...previous, bookingDate: event.target.value, })) } required className="w-full rounded-xl border border-orange-200 bg-white px-4 py-3 pr-11 text-sm text-[#3B2415] outline-none focus:border-[#EA580C] focus:ring-2 focus:ring-orange-100" /> <MdCalendarMonth size={20} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#EA580C]" />
+                    </div> <p className="mt-1.5 text-xs text-[#78716C]"> 
+                      Current booking date: {formatDate(selectedBooking.bookingDate)} </p> 
+                  </div>
+
                   {/* AMOUNT */}
 
                   <div>
@@ -941,16 +967,8 @@ const confirmedBookingCount = bookings.filter(
                         </div>
                       )}
 
-                    </div>
-                  </div>
 
-                  {/* ================================================== */}
-                  {/* QUICK SUMMARY */}
-                  {/* ================================================== */}
-
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-
-                    <div className="rounded-2xl border border-orange-100 bg-white p-4 shadow-sm">
+                      <div className="rounded-2xl border border-orange-100 bg-white p-4 shadow-sm">
 
                       <div className="flex items-center gap-3">
 
@@ -981,109 +999,11 @@ const confirmedBookingCount = bookings.filter(
 
                     </div>
 
-                    <div className="rounded-2xl border border-orange-100 bg-white p-4 shadow-sm">
-
-                      <div className="flex items-center gap-3">
-
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
-
-                          <MdEventAvailable
-                            size={21}
-                            className="text-blue-600"
-                          />
-
-                        </div>
-
-                        <div>
-
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#A8A29E]">
-                            Year
-                          </p>
-
-                          <p className="mt-0.5 text-sm font-bold text-[#3B2415]">
-                            {selectedBooking.year}
-                          </p>
-
-                        </div>
-
-                      </div>
-
                     </div>
-
-                    <div className="rounded-2xl border border-orange-100 bg-white p-4 shadow-sm">
-
-                      <div className="flex items-center gap-3">
-
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50">
-
-                          <span className="text-lg font-bold text-[#EA580C]">
-                            ₹
-                          </span>
-
-                        </div>
-
-                        <div>
-
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#A8A29E]">
-                            Contribution
-                          </p>
-
-                          <p className="mt-0.5 text-sm font-bold text-[#EA580C]">
-                            ₹
-                            {Number(
-                              selectedBooking.amount
-                            ).toLocaleString("en-IN")}
-                          </p>
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
                   </div>
 
-                  {/* ================================================== */}
-                  {/* POOJA INFORMATION */}
-                  {/* ================================================== */}
-
-                  <div className="rounded-2xl border border-orange-100 bg-white p-5 shadow-sm">
-
-                    <div className="flex items-start gap-4">
-
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#FFF3C4]">
-
-                        <MdEventAvailable
-                          size={25}
-                          className="text-[#EA580C]"
-                        />
-
-                      </div>
-
-                      <div className="min-w-0">
-
-                        <p className="text-xs font-semibold uppercase tracking-wider text-[#A8A29E]">
-                          Pooja
-                        </p>
-
-                        <h3 className="mt-1 text-lg font-bold text-[#3B2415]">
-                          {selectedBooking.poojaName}
-                        </h3>
-
-                        <p className="mt-1 text-sm text-[#78716C]">
-                          Scheduled for{" "}
-                          <span className="font-semibold text-[#57534E]">
-                            {formatDate(
-                              selectedBooking.bookingDate
-                            )}
-                          </span>
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                  </div>
+                 
+                  
 
                   {/* ================================================== */}
                   {/* BOOKING INFORMATION */}

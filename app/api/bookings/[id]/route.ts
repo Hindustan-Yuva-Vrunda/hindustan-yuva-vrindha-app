@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -9,16 +8,56 @@ type RouteContext = {
   }>;
 };
 
+type BookingStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "CANCELLED"
+  | "COMPLETED";
+
+type BookingUpdateData = {
+  devoteeName?: string;
+  devoteePhone?: string | null;
+  devoteeAddress?: string | null;
+  poojaName?: string;
+  amount?: number;
+  bookingDate?: Date;
+  year?: number;
+  notes?: string | null;
+  bookingStatus?: BookingStatus;
+};
+
+function isValidDateString(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return false;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
+function dateToUtc(value: string): Date {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
 // ==========================================================
-// GET /api/bookings/:id
-// ==========================================================
-//
-// USER  -> can view only their own booking
-// ADMIN -> can view any booking
+// GET /api/bookings/[id]
+// USER: can view own booking
+// ADMIN: can view any booking
 // ==========================================================
 
 export async function GET(
-  request: Request,
+  _request: Request,
   context: RouteContext
 ) {
   try {
@@ -26,10 +65,7 @@ export async function GET(
 
     if (!currentUser) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Unauthorized.",
-        },
+        { success: false, message: "Unauthorized." },
         { status: 401 }
       );
     }
@@ -38,18 +74,13 @@ export async function GET(
 
     if (!id) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Booking ID is required.",
-        },
+        { success: false, message: "Booking ID is required." },
         { status: 400 }
       );
     }
 
     const booking = await prisma.poojaBooking.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
       include: {
         agent: {
           select: {
@@ -64,15 +95,11 @@ export async function GET(
 
     if (!booking) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Booking not found.",
-        },
+        { success: false, message: "Booking not found." },
         { status: 404 }
       );
     }
 
-    // USER can access only their own booking.
     if (
       currentUser.role === "USER" &&
       booking.agentId !== currentUser.id
@@ -80,8 +107,7 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          message:
-            "You are not allowed to access this booking.",
+          message: "You are not allowed to access this booking.",
         },
         { status: 403 }
       );
@@ -92,38 +118,20 @@ export async function GET(
       booking,
     });
   } catch (error) {
-    console.error(
-      "GET /api/bookings/[id] error:",
-      error
-    );
+    console.error("GET /api/bookings/[id] error:", error);
 
     return NextResponse.json(
-      {
-        success: false,
-        message: "Failed to fetch booking.",
-      },
+      { success: false, message: "Failed to fetch booking." },
       { status: 500 }
     );
   }
 }
 
 // ==========================================================
-// PATCH /api/bookings/:id
-// ==========================================================
-//
-// USER  -> can update their own booking details
-// ADMIN -> can update any booking and status
-//
-// Editable:
-// - devoteeName
-// - phone / devoteePhone
-// - devoteeAddress
-// - poojaName
-// - amount
-// - notes
-//
-// Date is NOT editable here.
-// bookingTime does NOT exist in the current Prisma schema.
+// PATCH /api/bookings/[id]
+// USER: can update own booking
+// ADMIN: can update any booking and booking status
+// Supports changing bookingDate and year.
 // ==========================================================
 
 export async function PATCH(
@@ -135,10 +143,7 @@ export async function PATCH(
 
     if (!currentUser) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Unauthorized.",
-        },
+        { success: false, message: "Unauthorized." },
         { status: 401 }
       );
     }
@@ -147,31 +152,22 @@ export async function PATCH(
 
     if (!id) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Booking ID is required.",
-        },
+        { success: false, message: "Booking ID is required." },
         { status: 400 }
       );
     }
 
     const booking = await prisma.poojaBooking.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
     });
 
     if (!booking) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Booking not found.",
-        },
+        { success: false, message: "Booking not found." },
         { status: 404 }
       );
     }
 
-    // USER can update only their own booking.
     if (
       currentUser.role === "USER" &&
       booking.agentId !== currentUser.id
@@ -179,14 +175,34 @@ export async function PATCH(
       return NextResponse.json(
         {
           success: false,
-          message:
-            "You are not allowed to update this booking.",
+          message: "You are not allowed to update this booking.",
         },
         { status: 403 }
       );
     }
 
-    const body = await request.json();
+    if (booking.bookingStatus === "CANCELLED") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "A cancelled booking cannot be edited.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const body: unknown = await request.json();
+
+    if (
+      !body ||
+      typeof body !== "object" ||
+      Array.isArray(body)
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Invalid request body." },
+        { status: 400 }
+      );
+    }
 
     const {
       devoteeName,
@@ -195,28 +211,14 @@ export async function PATCH(
       devoteeAddress,
       poojaName,
       amount,
+      bookingDate,
       notes,
       bookingStatus,
-    } = body;
+    } = body as Record<string, unknown>;
 
-    const updateData: {
-      devoteeName?: string;
-      devoteePhone?: string | null;
-      devoteeAddress?: string | null;
-      poojaName?: string;
-      amount?: number;
-      notes?: string | null;
-      bookingStatus?:
-        | "PENDING"
-        | "CONFIRMED"
-        | "CANCELLED"
-        | "COMPLETED";
-    } = {};
+    const updateData: BookingUpdateData = {};
 
-    // ======================================================
     // DEVOTEE NAME
-    // ======================================================
-
     if (devoteeName !== undefined) {
       if (
         typeof devoteeName !== "string" ||
@@ -231,18 +233,12 @@ export async function PATCH(
         );
       }
 
-      updateData.devoteeName =
-        devoteeName.trim();
+      updateData.devoteeName = devoteeName.trim();
     }
 
-    // ======================================================
     // PHONE
-    // ======================================================
-
     const phoneValue =
-      devoteePhone !== undefined
-        ? devoteePhone
-        : phone;
+      devoteePhone !== undefined ? devoteePhone : phone;
 
     if (phoneValue !== undefined) {
       if (
@@ -250,35 +246,39 @@ export async function PATCH(
         typeof phoneValue !== "string"
       ) {
         return NextResponse.json(
+          { success: false, message: "Invalid phone number." },
+          { status: 400 }
+        );
+      }
+
+      if (
+        typeof phoneValue === "string" &&
+        phoneValue.trim() &&
+        !/^\d{10}$/.test(phoneValue.trim())
+      ) {
+        return NextResponse.json(
           {
             success: false,
-            message: "Invalid phone number.",
+            message: "Phone number must contain exactly 10 digits.",
           },
           { status: 400 }
         );
       }
 
       updateData.devoteePhone =
-        typeof phoneValue === "string" &&
-        phoneValue.trim()
+        typeof phoneValue === "string" && phoneValue.trim()
           ? phoneValue.trim()
           : null;
     }
 
-    // ======================================================
     // ADDRESS
-    // ======================================================
-
     if (devoteeAddress !== undefined) {
       if (
         devoteeAddress !== null &&
         typeof devoteeAddress !== "string"
       ) {
         return NextResponse.json(
-          {
-            success: false,
-            message: "Invalid address.",
-          },
+          { success: false, message: "Invalid address." },
           { status: 400 }
         );
       }
@@ -290,10 +290,7 @@ export async function PATCH(
           : null;
     }
 
-    // ======================================================
     // POOJA NAME
-    // ======================================================
-
     if (poojaName !== undefined) {
       if (
         typeof poojaName !== "string" ||
@@ -308,26 +305,23 @@ export async function PATCH(
         );
       }
 
-      updateData.poojaName =
-        poojaName.trim();
+      updateData.poojaName = poojaName.trim();
     }
 
-    // ======================================================
     // AMOUNT
-    // ======================================================
-
     if (amount !== undefined) {
       const numericAmount = Number(amount);
 
       if (
+        amount === "" ||
+        amount === null ||
         !Number.isFinite(numericAmount) ||
         numericAmount < 0
       ) {
         return NextResponse.json(
           {
             success: false,
-            message:
-              "Amount must be a valid number.",
+            message: "Amount must be a valid non-negative number.",
           },
           { status: 400 }
         );
@@ -336,142 +330,164 @@ export async function PATCH(
       updateData.amount = numericAmount;
     }
 
-    // ======================================================
-    // NOTES
-    // ======================================================
+    // BOOKING DATE / RESCHEDULING
+    if (bookingDate !== undefined) {
+      if (!isValidDateString(bookingDate)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid booking date. Please select a valid date.",
+          },
+          { status: 400 }
+        );
+      }
 
+      const newDate = dateToUtc(bookingDate);
+
+      // Compare calendar dates, avoiding timezone shifts.
+      const existingDate = booking.bookingDate
+        .toISOString()
+        .slice(0, 10);
+
+      const dateChanged = bookingDate !== existingDate;
+
+      if (dateChanged) {
+        const dayEnd = new Date(
+          newDate.getTime() + 24 * 60 * 60 * 1000
+        );
+
+        // A cancelled booking does not occupy the date.
+        // Exclude the booking currently being edited.
+        const conflictingBooking =
+          await prisma.poojaBooking.findFirst({
+            where: {
+              id: { not: id },
+              bookingStatus: { not: "CANCELLED" },
+              bookingDate: {
+                gte: newDate,
+                lt: dayEnd,
+              },
+            },
+            select: {
+              id: true,
+            },
+          });
+
+        if (conflictingBooking) {
+          return NextResponse.json(
+            {
+              success: false,
+              message:
+                "This date is already booked. Please select another date.",
+            },
+            { status: 409 }
+          );
+        }
+      }
+
+      updateData.bookingDate = newDate;
+      updateData.year = newDate.getUTCFullYear();
+    }
+
+    // NOTES
     if (notes !== undefined) {
       if (
         notes !== null &&
         typeof notes !== "string"
       ) {
         return NextResponse.json(
-          {
-            success: false,
-            message: "Invalid notes.",
-          },
+          { success: false, message: "Invalid notes." },
           { status: 400 }
         );
       }
 
       updateData.notes =
-        typeof notes === "string" &&
-        notes.trim()
+        typeof notes === "string" && notes.trim()
           ? notes.trim()
           : null;
     }
 
-    // ======================================================
-    // BOOKING STATUS
-    // ======================================================
-    // Only ADMIN can change status.
-    // ======================================================
-
+    // BOOKING STATUS: ADMIN ONLY
     if (bookingStatus !== undefined) {
       if (currentUser.role !== "ADMIN") {
         return NextResponse.json(
           {
             success: false,
-            message:
-              "Only admin can change booking status.",
+            message: "Only admin can change booking status.",
           },
           { status: 403 }
         );
       }
 
+      const validStatuses: BookingStatus[] = [
+        "PENDING",
+        "CONFIRMED",
+        "CANCELLED",
+        "COMPLETED",
+      ];
+
       if (
-        bookingStatus !== "PENDING" &&
-        bookingStatus !== "CONFIRMED" &&
-        bookingStatus !== "CANCELLED" &&
-        bookingStatus !== "COMPLETED"
+        typeof bookingStatus !== "string" ||
+        !validStatuses.includes(bookingStatus as BookingStatus)
       ) {
         return NextResponse.json(
-          {
-            success: false,
-            message: "Invalid booking status.",
-          },
+          { success: false, message: "Invalid booking status." },
           { status: 400 }
         );
       }
 
-      updateData.bookingStatus =
-        bookingStatus;
+      updateData.bookingStatus = bookingStatus as BookingStatus;
     }
-
-    // ======================================================
-    // NOTHING TO UPDATE
-    // ======================================================
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "No valid fields provided for update.",
+          message: "No valid fields provided for update.",
         },
         { status: 400 }
       );
     }
 
-    // ======================================================
-    // UPDATE
-    // ======================================================
-
-    const updatedBooking =
-      await prisma.poojaBooking.update({
-        where: {
-          id,
-        },
-
-        data: updateData,
-
-        include: {
-          agent: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              phone: true,
-            },
+    const updatedBooking = await prisma.poojaBooking.update({
+      where: { id },
+      data: updateData,
+      include: {
+        agent: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
           },
         },
-      });
+      },
+    });
 
     return NextResponse.json({
       success: true,
-      message:
-        "Booking updated successfully.",
+      message: "Booking updated successfully.",
       booking: updatedBooking,
     });
   } catch (error) {
-    console.error(
-      "PATCH /api/bookings/[id] error:",
-      error
-    );
+    console.error("PATCH /api/bookings/[id] error:", error);
 
     return NextResponse.json(
-      {
-        success: false,
-        message: "Failed to update booking.",
-      },
+      { success: false, message: "Failed to update booking." },
       { status: 500 }
     );
   }
 }
 
 // ==========================================================
-// DELETE /api/bookings/:id
-// ==========================================================
-//
-// USER  -> can cancel their own booking
-// ADMIN -> can cancel any booking
-//
-// Soft delete:
-// bookingStatus = CANCELLED
+// DELETE /api/bookings/[id]
+// USER: can cancel own booking
+// ADMIN: can cancel any booking
+// Soft delete: bookingStatus = CANCELLED
 // ==========================================================
 
 export async function DELETE(
-  request: Request,
+  _request: Request,
   context: RouteContext
 ) {
   try {
@@ -479,10 +495,7 @@ export async function DELETE(
 
     if (!currentUser) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Unauthorized.",
-        },
+        { success: false, message: "Unauthorized." },
         { status: 401 }
       );
     }
@@ -491,31 +504,22 @@ export async function DELETE(
 
     if (!id) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Booking ID is required.",
-        },
+        { success: false, message: "Booking ID is required." },
         { status: 400 }
       );
     }
 
     const booking = await prisma.poojaBooking.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
     });
 
     if (!booking) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Booking not found.",
-        },
+        { success: false, message: "Booking not found." },
         { status: 404 }
       );
     }
 
-    // USER can cancel only their own booking.
     if (
       currentUser.role === "USER" &&
       booking.agentId !== currentUser.id
@@ -523,14 +527,12 @@ export async function DELETE(
       return NextResponse.json(
         {
           success: false,
-          message:
-            "You are not allowed to cancel this booking.",
+          message: "You are not allowed to cancel this booking.",
         },
         { status: 403 }
       );
     }
 
-    // Already cancelled.
     if (booking.bookingStatus === "CANCELLED") {
       return NextResponse.json(
         {
@@ -541,34 +543,23 @@ export async function DELETE(
       );
     }
 
-    const cancelledBooking =
-      await prisma.poojaBooking.update({
-        where: {
-          id,
-        },
-
-        data: {
-          bookingStatus: "CANCELLED",
-        },
-      });
+    const cancelledBooking = await prisma.poojaBooking.update({
+      where: { id },
+      data: { bookingStatus: "CANCELLED" },
+    });
 
     return NextResponse.json({
       success: true,
-      message:
-        "Booking cancelled successfully.",
+      message: "Booking cancelled successfully.",
       booking: cancelledBooking,
     });
   } catch (error) {
-    console.error(
-      "DELETE /api/bookings/[id] error:",
-      error
-    );
+    console.error("DELETE /api/bookings/[id] error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message:
-          "Failed to cancel booking.",
+        message: "Failed to cancel booking.",
       },
       { status: 500 }
     );

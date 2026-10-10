@@ -1,7 +1,6 @@
+
 import { NextResponse } from "next/server";
-
 import { prisma } from "@/lib/prisma";
-
 import { getCurrentUser } from "@/lib/auth";
 
 const PAYMENT_MODES = [
@@ -22,17 +21,12 @@ function isPaymentMode(
   );
 }
 
-function parseContributionDate(value: unknown) {
-  if (
-    typeof value !== "string" ||
-    !value.trim()
-  ) {
+function parseContributionDate(value: unknown): Date | null {
+  if (typeof value !== "string" || !value.trim()) {
     return null;
   }
 
-  const date = new Date(
-    `${value}T00:00:00`
-  );
+  const date = new Date(`${value}T00:00:00`);
 
   if (Number.isNaN(date.getTime())) {
     return null;
@@ -41,54 +35,24 @@ function parseContributionDate(value: unknown) {
   return date;
 }
 
-// ==================================================
-// GET /api/collection?year=2026
-// ==================================================
-//
-// ALL LOGGED-IN USERS
-// -> see all members' collections
-//
-// ADMIN
-// -> see all collections
-//
-// Optional:
-// /api/collection?year=2026
-//
-// ==================================================
-
+// GET /api/payments?year=2026
+// All authenticated users can view all collections.
 export async function GET(request: Request) {
   try {
-    // --------------------------------------------------
-    // 1. Authentication
-    // --------------------------------------------------
-
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Please login first.",
-        },
+        { success: false, message: "Please login first." },
         { status: 401 }
       );
     }
 
-    // --------------------------------------------------
-    // 2. Read year
-    // --------------------------------------------------
-
     const { searchParams } = new URL(request.url);
-
     const yearParam = searchParams.get("year");
-
     const year = yearParam
       ? Number(yearParam)
       : new Date().getFullYear();
-
-    // --------------------------------------------------
-    // 3. Validate year
-    // --------------------------------------------------
 
     if (
       !Number.isInteger(year) ||
@@ -96,72 +60,35 @@ export async function GET(request: Request) {
       year > 2100
     ) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid year.",
-        },
+        { success: false, message: "Invalid year." },
         { status: 400 }
       );
     }
 
-    // --------------------------------------------------
-    // 4. WHERE CONDITION
-    // --------------------------------------------------
-    //
-    // IMPORTANT:
-    // Do NOT filter by agentId here.
-    //
-    // Every logged-in member can see all collections
-    // for the selected year.
-    //
-    // --------------------------------------------------
-
-    const where = {
-      year,
-    };
-
-    // --------------------------------------------------
-    // 5. Fetch ALL collections
-    // --------------------------------------------------
-
-    const collections =
-      await prisma.contribution.findMany({
-        where,
-
-        include: {
-          agent: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              phone: true,
-            },
+    const collections = await prisma.contribution.findMany({
+      where: { year },
+      include: {
+        agent: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
           },
         },
-
-        orderBy: [
-          {
-            contributionDate: "desc",
-          },
-          {
-            createdAt: "desc",
-          },
-        ],
-      });
-
-    // --------------------------------------------------
-    // 6. Response
-    // --------------------------------------------------
+      },
+      orderBy: [
+        { contributionDate: "desc" },
+        { createdAt: "desc" },
+      ],
+    });
 
     return NextResponse.json({
       success: true,
       collections,
     });
   } catch (error) {
-    console.error(
-      "GET /api/payments error:",
-      error
-    );
+    console.error("GET /api/payments error:", error);
 
     return NextResponse.json(
       {
@@ -173,98 +100,56 @@ export async function GET(request: Request) {
   }
 }
 
-// ==================================================
-// POST /api/collection
-// ==================================================
-//
-// USER only
-//
-// The collection is always associated with the
-// authenticated member through agentId.
-//
-// ==================================================
-
+// POST /api/payments
+// Only EDITOR and ADMIN can create collections.
 export async function POST(request: Request) {
   try {
-    // --------------------------------------------------
-    // 1. Authentication
-    // --------------------------------------------------
-
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
       return NextResponse.json(
-        {
-          success: false,
-          message:
-            "Please login to create a collection.",
-        },
+        { success: false, message: "Please login first." },
         { status: 401 }
       );
     }
 
-    // --------------------------------------------------
-    // 2. Only USER/member can create
-    // --------------------------------------------------
-
-    if (currentUser.role !== "USER") {
+    if (
+      currentUser.role !== "EDITOR" &&
+      currentUser.role !== "ADMIN"
+    ) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Only members can create collections.",
+          message: "Only editors and admins can create collections.",
         },
         { status: 403 }
       );
     }
 
-    // --------------------------------------------------
-    // 3. Verify authenticated user
-    // --------------------------------------------------
-
-    const user =
-      await prisma.user.findUnique({
-        where: {
-          id: currentUser.id,
-        },
-
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          status: true,
-        },
-      });
+    const user = await prisma.user.findUnique({
+      where: { id: currentUser.id },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
 
     if (!user) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "User account not found.",
-        },
+        { success: false, message: "User account not found." },
         { status: 404 }
       );
     }
-
-    // --------------------------------------------------
-    // 4. Must be approved
-    // --------------------------------------------------
 
     if (user.status !== "APPROVED") {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Your account is not approved.",
+          message: "Your account is not approved.",
         },
         { status: 403 }
       );
     }
-
-    // --------------------------------------------------
-    // 5. Read request body
-    // --------------------------------------------------
 
     const body = await request.json();
 
@@ -280,10 +165,6 @@ export async function POST(request: Request) {
       notes,
     } = body;
 
-    // --------------------------------------------------
-    // 6. Contributor name
-    // --------------------------------------------------
-
     if (
       typeof contributorName !== "string" ||
       !contributorName.trim()
@@ -291,50 +172,30 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Contributor name is required.",
+          message: "Contributor name is required.",
         },
         { status: 400 }
       );
     }
-
-    // --------------------------------------------------
-    // 7. Amount
-    // --------------------------------------------------
 
     const parsedAmount = Number(amount);
 
-    if (
-      !Number.isFinite(parsedAmount) ||
-      parsedAmount <= 0
-    ) {
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Amount must be greater than 0.",
+          message: "Amount must be greater than 0.",
         },
         { status: 400 }
       );
     }
-
-    // --------------------------------------------------
-    // 8. Payment mode
-    // --------------------------------------------------
 
     if (!isPaymentMode(paymentMode)) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid payment mode.",
-        },
+        { success: false, message: "Invalid payment mode." },
         { status: 400 }
       );
     }
-
-    // --------------------------------------------------
-    // 9. Year
-    // --------------------------------------------------
 
     const parsedYear = Number(year);
 
@@ -346,136 +207,89 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Invalid collection year.",
+          message: "Invalid collection year.",
         },
         { status: 400 }
       );
     }
 
-    // --------------------------------------------------
-    // 10. Contribution date
-    // --------------------------------------------------
-
-    const parsedDate =
-      parseContributionDate(
-        contributionDate
-      );
+    const parsedDate = parseContributionDate(contributionDate);
 
     if (!parsedDate) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Valid collection date is required.",
+          message: "Valid collection date is required.",
         },
         { status: 400 }
       );
     }
 
-    // --------------------------------------------------
-    // 11. Date must match selected year
-    // --------------------------------------------------
-
-    if (
-      parsedDate.getFullYear() !==
-      parsedYear
-    ) {
+    if (parsedDate.getFullYear() !== parsedYear) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Collection date must belong to the selected year.",
+          message: "Collection date must belong to the selected year.",
         },
         { status: 400 }
       );
     }
 
-    // --------------------------------------------------
-    // 12. Create contribution
-    // --------------------------------------------------
-
-    const contribution =
-      await prisma.contribution.create({
-        data: {
-          // IMPORTANT:
-          // Always store the authenticated member
-          // who created/collected this contribution.
-
-          agentId: user.id,
-
-          contributorName:
-            contributorName.trim(),
-
-          contributorPhone:
-            typeof contributorPhone === "string" &&
-            contributorPhone.trim()
-              ? contributorPhone.trim()
-              : null,
-
-          contributorAddress:
-            typeof contributorAddress === "string" &&
-            contributorAddress.trim()
-              ? contributorAddress.trim()
-              : null,
-
-          amount: parsedAmount,
-
-          paymentMode,
-
-          purpose:
-            typeof purpose === "string" &&
-            purpose.trim()
-              ? purpose.trim()
-              : null,
-
-          year: parsedYear,
-
-          contributionDate: parsedDate,
-
-          notes:
-            typeof notes === "string" &&
-            notes.trim()
-              ? notes.trim()
-              : null,
-        },
-
-        include: {
-          agent: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              phone: true,
-            },
+    const contribution = await prisma.contribution.create({
+      data: {
+        // Record the authenticated editor/admin who created it.
+        agentId: user.id,
+        contributorName: contributorName.trim(),
+        contributorPhone:
+          typeof contributorPhone === "string" &&
+          contributorPhone.trim()
+            ? contributorPhone.trim()
+            : null,
+        contributorAddress:
+          typeof contributorAddress === "string" &&
+          contributorAddress.trim()
+            ? contributorAddress.trim()
+            : null,
+        amount: parsedAmount,
+        paymentMode,
+        purpose:
+          typeof purpose === "string" && purpose.trim()
+            ? purpose.trim()
+            : null,
+        year: parsedYear,
+        contributionDate: parsedDate,
+        notes:
+          typeof notes === "string" && notes.trim()
+            ? notes.trim()
+            : null,
+      },
+      include: {
+        agent: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
           },
         },
-      });
-
-    // --------------------------------------------------
-    // 13. Success
-    // --------------------------------------------------
+      },
+    });
 
     return NextResponse.json(
       {
         success: true,
-        message:
-          "Collection created successfully.",
+        message: "Collection created successfully.",
         collection: contribution,
       },
       { status: 201 }
     );
   } catch (error) {
-    console.error(
-      "POST /api/collection error:",
-      error
-    );
+    console.error("POST /api/payments error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message:
-          "Something went wrong while creating the collection.",
+        message: "Failed to create collection.",
       },
       { status: 500 }
     );

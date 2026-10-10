@@ -505,7 +505,7 @@ export default function HeroSection() {
                 width={400}
                 height={400}
                 priority
-                quality={75}
+                quality={95}
                 sizes="(max-width: 639px) 260px, (max-width: 1023px) 340px, 400px"
                 className="
                   relative

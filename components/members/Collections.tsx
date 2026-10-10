@@ -55,6 +55,14 @@ export default function CollectionsSection() {
   const [selectedCollection, setSelectedCollection] =
     useState<Collection | null>(null);
 
+    const [currentUserRole, setCurrentUserRole] = useState<
+  "USER" | "EDITOR" | "ADMIN" | null
+>(null);
+
+const canManageCollections =
+  currentUserRole === "EDITOR" ||
+  currentUserRole === "ADMIN";
+
   // ==================================================
   // LOAD COLLECTIONS
   // ==================================================
@@ -505,6 +513,35 @@ export default function CollectionsSection() {
   // RENDER
   // ==================================================
 
+
+  useEffect(() => {
+  let cancelled = false;
+
+  async function loadCurrentUserRole() {
+    try {
+      const response = await fetch("/api/auth/me", {
+        cache: "no-store",
+      });
+
+      if (!response.ok) return;
+
+      const result = await response.json();
+
+      if (!cancelled) {
+        setCurrentUserRole(result.user?.role ?? null);
+      }
+    } catch (error) {
+      console.error("Failed to load current user role:", error);
+    }
+  }
+
+  loadCurrentUserRole();
+
+  return () => {
+    cancelled = true;
+  };
+}, []);
+
   return (
     <section
       className="
@@ -535,6 +572,7 @@ export default function CollectionsSection() {
         <div className="min-w-0">
           <CollectionHeader onAdd={handleAddCollection}
            onExport={handleExportCollectionsPdf} 
+canManageCollections={canManageCollections}
           />
         </div>
 
@@ -659,13 +697,14 @@ export default function CollectionsSection() {
       ================================================== */}
 
       {detailsOpen && selectedCollection && (
-        <CollectionDetailsModal
-          collection={selectedCollection}
-          onClose={handleCloseDetails}
-          onEdit={handleEditCollection}
-          onDelete={handleDeleteCollection}
-        />
-      )}
+   <CollectionDetailsModal
+    collection={selectedCollection}
+    onClose={handleCloseDetails}
+    onEdit={handleEditCollection}
+    onDelete={handleDeleteCollection}
+    canManageCollections={canManageCollections}
+  />
+)}
     </section>
   );
 }

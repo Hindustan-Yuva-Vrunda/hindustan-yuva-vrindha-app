@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+
 import {
   MdClose,
   MdEventAvailable,
@@ -8,10 +9,21 @@ import {
   MdPhone,
   MdNotes,
   MdTempleHindu,
+  MdCalendarMonth,
 } from "react-icons/md";
+
+type Booking = {
+  id: string;
+  date: string;
+  devoteeName: string;
+  phone: string;
+  poojaName: string;
+  notes?: string | null;
+};
 
 type Props = {
   date: string;
+  booking?: Booking | null;
   onClose: () => void;
   onSuccess: () => void;
 };
@@ -33,15 +45,49 @@ function formatDisplayDate(date: string) {
   });
 }
 
+function toDateInputValue(value: string) {
+  if (!value) return "";
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+
+  const parsed = new Date(value);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
 export default function PoojaBookingModal({
   date,
+  booking = null,
   onClose,
   onSuccess,
 }: Props) {
-  const [devoteeName, setDevoteeName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [poojaName, setPoojaName] = useState("Ganapati Pooja");
-  const [notes, setNotes] = useState("");
+  const isEditing = Boolean(booking);
+
+  const [bookingDate, setBookingDate] = useState(
+    toDateInputValue(booking?.date ?? date)
+  );
+
+  const [devoteeName, setDevoteeName] = useState(
+    booking?.devoteeName ?? ""
+  );
+
+  const [phone, setPhone] = useState(booking?.phone ?? "");
+
+  const [poojaName, setPoojaName] = useState(
+    booking?.poojaName ?? "Ganapati Pooja"
+  );
+
+  const [notes, setNotes] = useState(booking?.notes ?? "");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -50,12 +96,16 @@ export default function PoojaBookingModal({
     event: FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
-
     setError("");
 
     const trimmedName = devoteeName.trim();
     const trimmedPhone = phone.trim();
     const trimmedNotes = notes.trim();
+
+    if (!bookingDate) {
+      setError("Please select a booking date.");
+      return;
+    }
 
     if (!trimmedName) {
       setError("Devotee name is required.");
@@ -75,13 +125,17 @@ export default function PoojaBookingModal({
     try {
       setLoading(true);
 
-      const response = await fetch("/api/bookings", {
-        method: "POST",
+      const url = isEditing
+        ? `/api/bookings/${booking!.id}`
+        : "/api/bookings";
+
+      const response = await fetch(url, {
+        method: isEditing ? "PATCH" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          date,
+          date: bookingDate,
           devoteeName: trimmedName,
           phone: trimmedPhone,
           poojaName: poojaName.trim(),
@@ -94,17 +148,20 @@ export default function PoojaBookingModal({
 
       if (!response.ok) {
         setError(
-          data?.message || "Unable to create booking."
+          data?.message ||
+            `Unable to ${isEditing ? "update" : "create"} booking.`
         );
         return;
       }
 
       onSuccess();
     } catch (error) {
-      console.error("Create booking error:", error);
+      console.error("Save booking error:", error);
 
       setError(
-        "Something went wrong while creating the booking."
+        `Something went wrong while ${
+          isEditing ? "updating" : "creating"
+        } the booking.`
       );
     } finally {
       setLoading(false);
@@ -134,11 +191,13 @@ export default function PoojaBookingModal({
                 </p>
 
                 <h2 className="mt-0.5 text-xl font-bold text-[#3B2415] sm:mt-1 sm:text-2xl">
-                  Book Your Pooja
+                  {isEditing ? "Edit Pooja Booking" : "Book Your Pooja"}
                 </h2>
 
                 <p className="mt-0.5 text-xs text-[#78716C] sm:mt-1 sm:text-sm">
-                  Seek the blessings of Lord Ganesha
+                  {isEditing
+                    ? "Update your booking details"
+                    : "Seek the blessings of Lord Ganesha"}
                 </p>
               </div>
             </div>
@@ -155,27 +214,36 @@ export default function PoojaBookingModal({
           </div>
 
           {/* Selected date */}
-          <div className="mt-4 flex items-center gap-3 rounded-2xl border border-[#F3DFC0] bg-white/80 px-3 py-2.5 sm:mt-5 sm:px-4 sm:py-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#FFF3C4] sm:h-9 sm:w-9">
-              <MdEventAvailable
-                size={19}
-                className="text-[#EA580C]"
+          <div className="mt-4 rounded-2xl border border-[#F3DFC0] bg-white/80 px-3 py-3 sm:mt-5 sm:px-4 sm:py-4">
+            <label
+              htmlFor="booking-date"
+              className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#A16207]"
+            >
+              <MdCalendarMonth size={19} className="text-[#EA580C]" />
+              Pooja Booking Date
+            </label>
+
+            <div className="relative">
+              <input
+                id="booking-date"
+                type="date"
+                value={bookingDate}
+                onChange={(event) => setBookingDate(event.target.value)}
+                required
+                disabled={loading || !isEditing}
+                className="w-full rounded-xl border border-[#DDD6CE] bg-white px-3 py-3 text-sm font-semibold text-[#3B2415] outline-none transition focus:border-[#EA580C] focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-[#F5F5F4] disabled:opacity-100"
               />
             </div>
 
-            <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#A8A29E]">
-                Pooja Date
-              </p>
+            <p className="mt-2 text-xs text-[#78716C]">
+              {bookingDate ? formatDisplayDate(bookingDate) : "Select a date"}
+            </p>
 
-              <p className="mt-0.5 truncate text-xs font-bold text-[#3B2415] sm:text-sm">
-                {formatDisplayDate(date)}
+            {!isEditing && (
+              <p className="mt-1 text-[11px] text-[#A8A29E]">
+                Choose the date from the booking calendar before opening this form.
               </p>
-
-              <p className="mt-0.5 text-[10px] text-[#A8A29E] sm:text-xs">
-                {date}
-              </p>
-            </div>
+            )}
           </div>
         </div>
 
@@ -189,20 +257,19 @@ export default function PoojaBookingModal({
             <div className="space-y-4 sm:space-y-5">
               {/* Devotee Name */}
               <div>
-                <label className="mb-2 flex items-center gap-2 text-sm font-bold text-[#3B2415]">
-                  <MdPerson
-                    size={18}
-                    className="text-[#EA580C]"
-                  />
+                <label
+                  htmlFor="devotee-name"
+                  className="mb-2 flex items-center gap-2 text-sm font-bold text-[#3B2415]"
+                >
+                  <MdPerson size={18} className="text-[#EA580C]" />
                   Devotee Name
                 </label>
 
                 <input
+                  id="devotee-name"
                   type="text"
                   value={devoteeName}
-                  onChange={(event) =>
-                    setDevoteeName(event.target.value)
-                  }
+                  onChange={(event) => setDevoteeName(event.target.value)}
                   required
                   autoComplete="name"
                   placeholder="Enter devotee name"
@@ -213,22 +280,22 @@ export default function PoojaBookingModal({
 
               {/* Phone */}
               <div>
-                <label className="mb-2 flex items-center gap-2 text-sm font-bold text-[#3B2415]">
-                  <MdPhone
-                    size={18}
-                    className="text-[#EA580C]"
-                  />
+                <label
+                  htmlFor="booking-phone"
+                  className="mb-2 flex items-center gap-2 text-sm font-bold text-[#3B2415]"
+                >
+                  <MdPhone size={18} className="text-[#EA580C]" />
                   Phone Number
                 </label>
 
                 <input
+                  id="booking-phone"
                   type="tel"
                   value={phone}
                   onChange={(event) => {
-                    const numericValue =
-                      event.target.value
-                        .replace(/\D/g, "")
-                        .slice(0, 10);
+                    const numericValue = event.target.value
+                      .replace(/\D/g, "")
+                      .slice(0, 10);
 
                     setPhone(numericValue);
 
@@ -265,56 +332,45 @@ export default function PoojaBookingModal({
 
               {/* Pooja */}
               <div>
-                <label className="mb-2 flex items-center gap-2 text-sm font-bold text-[#3B2415]">
-                  <MdEventAvailable
-                    size={18}
-                    className="text-[#EA580C]"
-                  />
+                <label
+                  htmlFor="pooja-name"
+                  className="mb-2 flex items-center gap-2 text-sm font-bold text-[#3B2415]"
+                >
+                  <MdEventAvailable size={18} className="text-[#EA580C]" />
                   Select Pooja
                 </label>
 
                 <select
+                  id="pooja-name"
                   value={poojaName}
-                  onChange={(event) =>
-                    setPoojaName(event.target.value)
-                  }
+                  onChange={(event) => setPoojaName(event.target.value)}
                   required
                   disabled={loading}
                   className="w-full rounded-2xl border border-[#DDD6CE] bg-white px-4 py-3 text-sm font-medium text-[#3B2415] outline-none transition focus:border-[#EA580C] focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-[#F5F5F4] sm:py-3.5"
                 >
-                  <option value="Ganapati Pooja">
-                    Ganapati Pooja
-                  </option>
-
-                  <option value="Sankashti Pooja">
-                    Sankashti Pooja
-                  </option>
-
-                  <option value="Special Pooja">
-                    Special Pooja
-                  </option>
+                  <option value="Ganapati Pooja">Ganapati Pooja</option>
+                  <option value="Sankashti Pooja">Sankashti Pooja</option>
+                  <option value="Special Pooja">Special Pooja</option>
                 </select>
               </div>
 
               {/* Notes */}
               <div>
-                <label className="mb-2 flex items-center gap-2 text-sm font-bold text-[#3B2415]">
-                  <MdNotes
-                    size={18}
-                    className="text-[#EA580C]"
-                  />
+                <label
+                  htmlFor="booking-notes"
+                  className="mb-2 flex items-center gap-2 text-sm font-bold text-[#3B2415]"
+                >
+                  <MdNotes size={18} className="text-[#EA580C]" />
                   Notes
-
                   <span className="font-normal text-[#A8A29E]">
                     (Optional)
                   </span>
                 </label>
 
                 <textarea
+                  id="booking-notes"
                   value={notes}
-                  onChange={(event) =>
-                    setNotes(event.target.value)
-                  }
+                  onChange={(event) => setNotes(event.target.value)}
                   rows={3}
                   disabled={loading}
                   placeholder="Any special request or information..."
@@ -324,7 +380,10 @@ export default function PoojaBookingModal({
 
               {/* Error */}
               {error && (
-                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+                <div
+                  role="alert"
+                  className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600"
+                >
                   {error}
                 </div>
               )}
@@ -359,7 +418,13 @@ export default function PoojaBookingModal({
                 disabled={loading}
                 className="flex-1 rounded-2xl bg-[#EA580C] px-3 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#C2410C] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-3.5"
               >
-                {loading ? "Booking..." : "Confirm Pooja"}
+                {loading
+                  ? isEditing
+                    ? "Updating..."
+                    : "Booking..."
+                  : isEditing
+                    ? "Update Booking"
+                    : "Confirm Pooja"}
               </button>
             </div>
           </div>

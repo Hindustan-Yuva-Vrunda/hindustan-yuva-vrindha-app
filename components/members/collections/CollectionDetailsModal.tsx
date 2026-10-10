@@ -26,6 +26,7 @@ type Props = {
   onClose: () => void;
   onEdit: (collection: Collection) => void;
   onDelete: (collection: Collection) => void;
+  canManageCollections: boolean;
 };
 
 export default function CollectionDetailsModal({
@@ -33,6 +34,7 @@ export default function CollectionDetailsModal({
   onClose,
   onEdit,
   onDelete,
+  canManageCollections,
 }: Props) {
   if (!collection) {
     return null;
@@ -43,7 +45,7 @@ export default function CollectionDetailsModal({
       className="
         fixed
         inset-0
-        z-100
+        z-[100]
         flex
         min-h-dvh
         min-w-0
@@ -75,9 +77,7 @@ export default function CollectionDetailsModal({
           sm:rounded-3xl
         "
       >
-        {/* =====================================================
-            HEADER - FIXED
-        ====================================================== */}
+        {/* HEADER */}
         <div
           className="
             relative
@@ -113,11 +113,7 @@ export default function CollectionDetailsModal({
                 sm:rounded-2xl
               "
             >
-              <MdReceiptLong
-                size={22}
-                className="sm:hidden"
-              />
-
+              <MdReceiptLong size={22} className="sm:hidden" />
               <MdReceiptLong
                 size={25}
                 className="hidden sm:block"
@@ -146,9 +142,7 @@ export default function CollectionDetailsModal({
                   sm:text-sm
                 "
               >
-                {formatDate(
-                  collection.contributionDate
-                )}
+                {formatDate(collection.contributionDate)}
               </p>
             </div>
           </div>
@@ -179,10 +173,7 @@ export default function CollectionDetailsModal({
           </button>
         </div>
 
-        {/* =====================================================
-            AMOUNT - FIXED
-            This section DOES NOT scroll.
-        ====================================================== */}
+        {/* AMOUNT - FIXED */}
         <div
           className="
             shrink-0
@@ -204,7 +195,7 @@ export default function CollectionDetailsModal({
               rounded-xl
               border
               border-[#F4D58D]
-              bg-linear-to
+              bg-gradient-to-r
               from-[#FFF8E8]
               via-[#FFF3D2]
               to-[#FFF9EE]
@@ -266,7 +257,6 @@ export default function CollectionDetailsModal({
                   max-w-full
                   min-w-0
                   wrap-break-word
-                  wrap:anywhere
                   text-2xl
                   font-extrabold
                   leading-tight
@@ -307,26 +297,18 @@ export default function CollectionDetailsModal({
               >
                 <MdPayments
                   size={14}
-                  className="
-                    shrink-0
-                    sm:h-4
-                    sm:w-4
-                  "
+                  className="shrink-0 sm:h-4 sm:w-4"
                 />
 
                 <span className="min-w-0 truncate">
-                  {getPaymentLabel(
-                    collection.paymentMode
-                  )}
+                  {getPaymentLabel(collection.paymentMode)}
                 </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* =====================================================
-            DETAILS - ONLY THIS AREA SCROLLS
-        ====================================================== */}
+        {/* DETAILS - ONLY THIS AREA SCROLLS */}
         <div
           className="
             min-h-0
@@ -355,20 +337,14 @@ export default function CollectionDetailsModal({
             <Detail
               icon={<MdPerson size={19} />}
               label="Contributor"
-              value={
-                collection.contributorName ||
-                "Not provided"
-              }
+              value={collection.contributorName || "Not provided"}
             />
 
             {/* Phone */}
             <Detail
               icon={<MdPhone size={19} />}
               label="Phone"
-              value={
-                collection.contributorPhone ||
-                "Not provided"
-              }
+              value={collection.contributorPhone || "Not provided"}
             />
 
             {/* Year */}
@@ -382,9 +358,7 @@ export default function CollectionDetailsModal({
             <Detail
               icon={<MdPayments size={19} />}
               label="Payment"
-              value={getPaymentLabel(
-                collection.paymentMode
-              )}
+              value={getPaymentLabel(collection.paymentMode)}
             />
 
             {/* Address */}
@@ -393,8 +367,7 @@ export default function CollectionDetailsModal({
                 icon={<MdLocationOn size={19} />}
                 label="Address"
                 value={
-                  collection.contributorAddress ||
-                  "Not provided"
+                  collection.contributorAddress || "Not provided"
                 }
               />
             </div>
@@ -404,10 +377,7 @@ export default function CollectionDetailsModal({
               <Detail
                 icon={<MdReceiptLong size={19} />}
                 label="Purpose"
-                value={
-                  collection.purpose ||
-                  "Not provided"
-                }
+                value={collection.purpose || "Not provided"}
               />
             </div>
 
@@ -424,9 +394,7 @@ export default function CollectionDetailsModal({
           </div>
         </div>
 
-        {/* =====================================================
-            ACTIONS - FIXED
-        ====================================================== */}
+        {/* ACTIONS - FIXED */}
         <div
           className="
             shrink-0
@@ -441,77 +409,112 @@ export default function CollectionDetailsModal({
           "
         >
           <div
-            className="
+            className={`
               flex
               flex-col-reverse
               gap-2.5
               sm:flex-row
-              sm:justify-end
               sm:gap-3
-            "
+              ${
+                canManageCollections
+                  ? "sm:justify-end"
+                  : "sm:justify-center"
+              }
+            `}
           >
+            {/* Only EDITOR and ADMIN can delete */}
+            {canManageCollections && (
+              <button
+                type="button"
+                onClick={() => onDelete(collection)}
+                className="
+                  inline-flex
+                  h-11
+                  w-full
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-xl
+                  border
+                  border-red-200
+                  bg-white
+                  px-4
+                  text-sm
+                  font-bold
+                  text-red-600
+                  transition-all
+                  duration-200
+                  hover:bg-red-50
+                  active:scale-[0.98]
+                  sm:h-10
+                  sm:w-auto
+                "
+              >
+                <MdDelete size={18} />
+                <span>Delete</span>
+              </button>
+            )}
+
+            {/* Only EDITOR and ADMIN can edit */}
+            {canManageCollections && (
+              <button
+                type="button"
+                onClick={() => onEdit(collection)}
+                className="
+                  inline-flex
+                  h-11
+                  w-full
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-xl
+                  bg-[#EA580C]
+                  px-5
+                  text-sm
+                  font-bold
+                  text-white
+                  shadow-sm
+                  transition-all
+                  duration-200
+                  hover:bg-[#C2410C]
+                  hover:shadow-md
+                  active:scale-[0.98]
+                  sm:h-10
+                  sm:w-auto
+                "
+              >
+                <MdEdit size={18} />
+                <span>Edit Collection</span>
+              </button>
+            )}
+
+            {/* All roles can close the modal */}
             <button
               type="button"
-              onClick={() =>
-                onDelete(collection)
-              }
+              onClick={onClose}
               className="
                 inline-flex
                 h-11
                 w-full
                 items-center
                 justify-center
-                gap-2
                 rounded-xl
                 border
-                border-red-200
+                border-[#EEE7DD]
                 bg-white
-                px-4
-                text-sm
-                font-bold
-                text-red-600
-                transition-all
-                duration-200
-                hover:bg-red-50
-                active:scale-[0.98]
-                sm:h-10
-                sm:w-auto
-              "
-            >
-              <MdDelete size={18} />
-              <span>Delete</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                onEdit(collection)
-              }
-              className="
-                inline-flex
-                h-11
-                w-full
-                items-center
-                justify-center
-                gap-2
-                rounded-xl
-                bg-[#EA580C]
                 px-5
                 text-sm
                 font-bold
-                text-white
-                shadow-sm
+                text-[#57534E]
                 transition-all
                 duration-200
-                hover:bg-[#C2410C]
-                hover:shadow-md
+                hover:bg-[#F5F1EA]
                 active:scale-[0.98]
                 sm:h-10
                 sm:w-auto
               "
             >
-              <MdEdit size={18} />
-              <span>Edit Collection</span>
+              Close
             </button>
           </div>
         </div>
@@ -536,8 +539,8 @@ function Detail({
   return (
     <div
       className="
-        min-w-0
         w-full
+        min-w-0
         overflow-hidden
         rounded-xl
         border
@@ -547,14 +550,7 @@ function Detail({
         sm:p-3.5
       "
     >
-      <div
-        className="
-          flex
-          min-w-0
-          items-center
-          gap-2
-        "
-      >
+      <div className="flex min-w-0 items-center gap-2">
         <div
           className="
             flex
@@ -592,7 +588,6 @@ function Detail({
           mt-2
           min-w-0
           wrap-break-word
-          wrap:anywhere
           text-sm
           font-semibold
           leading-5
