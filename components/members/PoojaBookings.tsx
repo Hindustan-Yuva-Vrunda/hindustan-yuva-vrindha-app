@@ -806,16 +806,55 @@ function toDateInputValue(date: string) {
 
 
                   {/* BOOKING DATE */}
-                   <div> 
-                    <label className="mb-2 block text-sm font-bold text-[#3B2415]"> Booking Date </label> 
-                    <div className="relative"> 
-                      <input type="date" 
-                      value={editForm.bookingDate} 
-                      onChange={(event) => 
-                      setEditForm((previous) => ({ ...previous, bookingDate: event.target.value, })) } required className="w-full rounded-xl border border-orange-200 bg-white px-4 py-3 pr-11 text-sm text-[#3B2415] outline-none focus:border-[#EA580C] focus:ring-2 focus:ring-orange-100" /> <MdCalendarMonth size={20} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#EA580C]" />
-                    </div> <p className="mt-1.5 text-xs text-[#78716C]"> 
-                      Current booking date: {formatDate(selectedBooking.bookingDate)} </p> 
-                  </div>
+            
+<div>
+  <label className="mb-2 block text-sm font-bold text-[#3B2415]">
+    Booking Date
+  </label>
+
+  <div className="relative">
+    <input
+      id="bookingDate"
+      type="date"
+      value={editForm.bookingDate}
+      onChange={(event) =>
+        setEditForm((previous) => ({
+          ...previous,
+          bookingDate: event.target.value,
+        }))
+      }
+      required
+      className="w-full appearance-none rounded-xl border border-orange-200 bg-white px-4 py-3 pr-11 text-sm text-[#3B2415] outline-none focus:border-[#EA580C] focus:ring-2 focus:ring-orange-100 [&::-webkit-calendar-picker-indicator]:hidden"
+    />
+
+    <button
+      type="button"
+      aria-label="Open booking date calendar"
+      onClick={() => {
+        const input = document.getElementById(
+          "bookingDate"
+        ) as HTMLInputElement | null;
+
+        if (!input) return;
+
+        if (typeof input.showPicker === "function") {
+          input.showPicker();
+        } else {
+          input.focus();
+          input.click();
+        }
+      }}
+      className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-[#EA580C]"
+    >
+      <MdCalendarMonth size={20} />
+    </button>
+  </div>
+
+  <p className="mt-1.5 text-xs text-[#78716C]">
+    Current booking date: {formatDate(selectedBooking.bookingDate)}
+  </p>
+</div>
+
 
                   {/* AMOUNT */}
 
